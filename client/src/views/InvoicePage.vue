@@ -38,7 +38,7 @@
           <th>Tháng</th>
           <th>Tổng tiền</th>
           <th>Trạng thái</th>
-          <th>Chi tiết</th>
+          <th>Hành động</th>
         </tr>
       </thead>
 
@@ -49,14 +49,32 @@
           <td>{{ formatMoney(inv.totalAmount) }} đ</td>
           <td>
             <span :class="inv.status === 'PAID' ? 'paid' : 'unpaid'">
-              {{ inv.status }}
+              {{ inv.status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
             </span>
           </td>
+
           <td>
-            <button @click="viewDetail(inv)">
-              Xem
-            </button>
+            <div class="actions-btn">
+
+              <button class="btn view" @click="viewDetail(inv)">
+                Xem
+              </button>
+
+              <button class="btn qr" @click="generateQR(inv)">
+                QR
+              </button>
+
+              <button 
+                v-if="inv.status === 'UNPAID'"
+                class="btn pay"
+                @click="markPaid(inv)"
+              >
+                Thanh toán
+              </button>
+
+            </div>
           </td>
+
         </tr>
       </tbody>
     </table>
@@ -75,19 +93,23 @@
         <p><b>Tháng:</b> {{ selectedInvoice.month }}</p>
 
         <table class="detail-table">
-          <tr>
-            <th>Dịch vụ</th>
-            <th>Số lượng</th>
-            <th>Đơn giá</th>
-            <th>Thành tiền</th>
-          </tr>
+          <thead>
+            <tr>
+              <th>Dịch vụ</th>
+              <th>Số lượng</th>
+              <th>Đơn giá</th>
+              <th>Thành tiền</th>
+            </tr>
+          </thead>
 
-          <tr v-for="d in details" :key="d.id">
-            <td>{{ d.serviceName }}</td>
-            <td>{{ d.quantity }}</td>
-            <td>{{ formatMoney(d.unitPrice) }}</td>
-            <td>{{ formatMoney(d.amount) }}</td>
-          </tr>
+          <tbody>
+            <tr v-for="d in details" :key="d.id">
+              <td>{{ d.serviceName }}</td>
+              <td>{{ d.quantity }}</td>
+              <td>{{ formatMoney(d.unitPrice) }}</td>
+              <td>{{ formatMoney(d.amount) }}</td>
+            </tr>
+          </tbody>
         </table>
 
         <h4 class="total">
@@ -95,6 +117,33 @@
         </h4>
 
         <button @click="closeDetail">Đóng</button>
+      </div>
+    </div>
+
+    <!-- MODAL QR -->
+    <div v-if="showQR" class="modal-overlay" @click.self="showQR = false">
+      <div class="modal-card qr-card">
+
+        <h3>💳 Quét mã để thanh toán</h3>
+
+        <img v-if="qrUrl" :src="qrUrl" alt="QR Code" />
+
+        <p class="qr-title">
+          {{ selectedInvoice.roomName }} - {{ selectedInvoice.month }}
+        </p>
+
+        <p class="qr-amount">
+          {{ formatMoney(selectedInvoice.totalAmount) }} đ
+        </p>
+
+        <p class="qr-note">
+          Nội dung: PHONG_{{ selectedInvoice.roomName }}_T{{ selectedInvoice.month }}
+        </p>
+
+        <button class="close-btn" @click="showQR = false">
+          Đóng
+        </button>
+
       </div>
     </div>
 
@@ -125,7 +174,10 @@ export default {
 
       showDetail: false,
       selectedInvoice: {},
-      details: []
+      details: [],
+
+      showQR: false,
+      qrUrl: ""
     }
   },
 
@@ -181,7 +233,6 @@ export default {
         })
 
         alert("Tính tiền thành công")
-
         this.fetchInvoices()
 
       } catch (err) {
@@ -200,6 +251,35 @@ export default {
         this.details = res.data
       } catch (err) {
         console.error(err)
+      }
+
+    },
+
+    generateQR(inv) {
+
+      this.selectedInvoice = inv
+
+      const bankCode = "970422" // MB Bank (đổi theo bank bạn)
+      const accountNo = "0353260919" // STK của bạn
+
+      const amount = inv.totalAmount
+      const content = `PHONG_${inv.roomName}_T${inv.month}`
+
+      this.qrUrl = `https://img.vietqr.io/image/${bankCode}-${accountNo}-compact.png?amount=${amount}&addInfo=${content}`
+
+      this.showQR = true
+    },
+
+    async markPaid(inv){
+
+      if(!confirm("Xác nhận đã thanh toán?")) return
+
+      try{
+        await api.put(`/invoices/${inv.id}/pay`)
+        inv.status = "PAID"
+      }catch(err){
+        console.error(err)
+        alert("Lỗi cập nhật trạng thái")
       }
 
     },
@@ -266,14 +346,27 @@ select, input {
   text-align: center;
 }
 
+.invoice-table th {
+  background:#f8f9fa;
+}
+
+.invoice-table tr:hover {
+  background:#f1f1f1;
+}
+
+/* STATUS */
 .paid {
-  color: green;
-  font-weight: bold;
+  color:#2ecc71;
+  background:#eafaf1;
+  padding:4px 8px;
+  border-radius:6px;
 }
 
 .unpaid {
-  color: red;
-  font-weight: bold;
+  color:#e74c3c;
+  background:#fdecea;
+  padding:4px 8px;
+  border-radius:6px;
 }
 
 .empty-state{
@@ -282,24 +375,135 @@ select, input {
   color:#888;
 }
 
-/* MODAL */
+/* BUTTONS */
+.actions-btn{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+}
+
+.btn{
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;
+  transition:0.2s;
+}
+
+.btn.view{
+  background:#3498db;
+  color:white;
+}
+
+.btn.qr{
+  background:#9b59b6;
+  color:white;
+}
+
+.btn.pay{
+  background:#2ecc71;
+  color:white;
+}
+
+.btn:hover{
+  opacity:0.8;
+}
+/* ===== MODAL OVERLAY ===== */
 .modal-overlay {
   position: fixed;
   top:0;
   left:0;
   right:0;
   bottom:0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
   display:flex;
   justify-content:center;
   align-items:center;
+  z-index:999;
 }
 
+/* ===== MODAL CARD ===== */
 .modal-card {
   background:white;
-  padding:20px;
-  border-radius:10px;
-  width:500px;
+  padding:24px;
+  border-radius:16px;
+  width:360px;
+  max-width:90%;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  animation:fadeIn 0.25s ease;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from {
+    opacity:0;
+    transform:translateY(20px);
+  }
+  to {
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* ===== QR CARD ===== */
+.qr-card h3 {
+  margin-bottom:10px;
+}
+
+/* ===== QR IMAGE ===== */
+.qr-card img {
+  width:220px;
+  height:220px;
+  object-fit:contain;
+  margin:16px auto;
+  display:block;
+
+  border-radius:12px;
+  border:1px solid #eee;
+  padding:10px;
+  background:#fafafa;
+}
+
+/* ===== TEXT ===== */
+.qr-title {
+  font-weight:600;
+  margin-top:8px;
+}
+
+.qr-amount {
+  color:#e74c3c;
+  font-size:20px;
+  font-weight:bold;
+  margin:10px 0;
+}
+
+.qr-note {
+  font-size:13px;
+  color:#666;
+  background:#f3f4f6;
+  padding:6px 10px;
+  border-radius:6px;
+  display:inline-block;
+}
+
+/* ===== BUTTON ===== */
+.close-btn {
+  margin-top:15px;
+  background:#ff5a5f;
+  color:white;
+  border:none;
+  padding:8px 18px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:500;
+  transition:0.2s;
+}
+
+.close-btn:hover {
+  opacity:0.9;
 }
 
 .detail-table {
@@ -317,5 +521,8 @@ select, input {
   margin-top: 10px;
   color: red;
 }
-
+.modal-overlay {
+  z-index: 9999;
+}
 </style>
+

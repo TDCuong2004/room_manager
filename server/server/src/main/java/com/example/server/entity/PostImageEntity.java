@@ -1,13 +1,12 @@
 package com.example.server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
-@Table(name = "room_images")
 @Data
-public class RoomImage {
+@Entity
+@Table(name = "post_images")
+public class PostImageEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,7 +15,6 @@ public class RoomImage {
     private String imageUrl;
 
     @ManyToOne
-    @JoinColumn(name = "room_id")
-    @JsonBackReference
-    private Rooms room;
+    @JoinColumn(name = "post_id")
+    private PostEntity post;
 }

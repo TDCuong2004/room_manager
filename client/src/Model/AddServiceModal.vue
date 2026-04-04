@@ -30,7 +30,7 @@
               BY_METER (tính theo số lượng)
             </option>
 
-            <option value="PER_PERSON">
+            <option value="BY_PERSON">
               BY_PERSON (tính theo người)
             </option>
 

@@ -1,9 +1,10 @@
-package com.example.server.services;
+package com.example.server.serviceiml;
 
 import com.example.server.entity.Building;
 import com.example.server.entity.User;
 import com.example.server.repository.BuildingRepository;
 import com.example.server.repository.UserRepository;
+import com.example.server.services.BuildingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

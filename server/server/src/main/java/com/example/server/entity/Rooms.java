@@ -1,10 +1,12 @@
 package com.example.server.entity;
 
 import com.example.server.enums.RoomStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "rooms")
@@ -31,4 +33,9 @@ public class Rooms {
     @ManyToOne
     @JoinColumn(name = "building_id")
     private Building building;
+    @Transient
+    private Integer currentPeople;
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<RoomImage> images;
 }

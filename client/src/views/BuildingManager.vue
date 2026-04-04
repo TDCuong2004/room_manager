@@ -45,7 +45,7 @@
             class="service-btn"
             @click.stop="goToServices(b.id)"
           >
-            Dịch vụ
+            Dịch vụ tòa
           </button>
 
         </div>
@@ -293,5 +293,17 @@ export default {
   font-size: 15px;
   color: #9ca3af;
 }
+.service-btn {
+  background: #10b981; /* xanh lá */
+  border: none;
+  color: white;
+  padding: 7px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
 
+.service-btn:hover {
+  background: #059669;
+}
 </style>

@@ -1,7 +1,8 @@
-package com.example.server.services;
+package com.example.server.serviceiml;
 
 import com.example.server.entity.ServiceEntity;
 import com.example.server.repository.ServiceRepository;
+import com.example.server.services.ServiceService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

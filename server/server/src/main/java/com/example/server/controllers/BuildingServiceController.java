@@ -1,5 +1,6 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.BuildingServiceDTO;
 import com.example.server.entity.BuildingService;
 import com.example.server.services.BuildingServiceService;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class BuildingServiceController {
     }
 
     @GetMapping("/{buildingId}")
-    public List<BuildingService> getByBuilding(@PathVariable Long buildingId) {
+    public List<BuildingServiceDTO> getByBuilding(@PathVariable Long buildingId) {
         return service.getByBuilding(buildingId);
     }
 

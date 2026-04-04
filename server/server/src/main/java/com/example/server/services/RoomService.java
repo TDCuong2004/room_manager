@@ -1,6 +1,8 @@
 package com.example.server.services;
 
+import com.example.server.dto.RoomServiceDTO;
 import com.example.server.entity.Rooms;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,4 +19,7 @@ public interface RoomService {
     Rooms update(Long id, Rooms room);
 
     void delete(Long id);
+    List<RoomServiceDTO> getServicesByRoom(Long roomId);
+    Rooms createWithImages(Rooms room, List<MultipartFile> images);
+    Rooms updateWithImages(Long id, Rooms room, List<MultipartFile> images);
 }

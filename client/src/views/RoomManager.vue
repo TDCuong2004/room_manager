@@ -37,6 +37,7 @@
       <p>Giá: {{ formatMoney(room.price) }} đ</p>
       <p>Diện tích: {{ room.area }} m²</p>
       <p>Số người tối đa: {{ room.maxPeople }}</p>
+      <p>Số người hiện tại: {{ room.currentPeople }}</p>
 
       <p>
         Trạng thái:
@@ -54,8 +55,14 @@
         <button class="delete-btn" @click="deleteRoom(room.id)">
           Xóa
         </button>
-        <button class="rent-btn" @click="openRent(room)">
-          Cho thuê
+        <button
+          :class="['rent-btn', room.status === 'RENTED' ? 'rented' : '']"
+          @click="room.status !== 'RENTED' && openRent(room)"
+        >
+          {{ room.status === 'RENTED' ? 'Đã có người thuê' : 'Cho thuê' }}
+        </button>
+        <button class="service-btn" @click="openMeter(room)">
+          Dịch vụ
         </button>
       </div>
 
@@ -76,7 +83,12 @@
     @close="showModal=false"
     @saved="handleSaved"
   />
-
+  <MeterModal
+    v-if="showMeter"
+    :room="selectedRoom"
+    @close="showMeter=false"
+    @saved="handleSaved"
+  />
 </div>
 </template>
 
@@ -84,7 +96,7 @@
 
 import axios from "axios"
 import AddRoom from "@/Model/AddRoom.vue"
-
+import MeterModal from "@/Model/MeterModal.vue"
 const api = axios.create({
   baseURL: "http://localhost:3000/api"
 })
@@ -104,7 +116,8 @@ api.interceptors.request.use(config => {
 export default {
 
   components:{
-    AddRoom
+    AddRoom,
+    MeterModal
   },
 
   props:["buildingId"],
@@ -114,8 +127,8 @@ export default {
 
       rooms:[],
       showModal:false,
-      selectedRoom:null
-
+      selectedRoom:null,
+      showMeter:false,
     }
   },
 
@@ -142,7 +155,10 @@ export default {
       }
 
     },
-
+    openMeter(room){
+      this.selectedRoom = room
+      this.showMeter = true
+    },
     goBack(){
       this.$emit("back")
     },
@@ -357,7 +373,25 @@ export default {
 .delete-btn:hover{
   opacity:0.9;
 }
+.rent-btn {
+  background: #f59e0b; /* vàng */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
 
+.rent-btn:hover {
+  opacity: 0.9;
+}
+
+/* khi đã thuê */
+.rent-btn.rented {
+  background: #9ca3af; /* xám */
+  cursor: not-allowed;
+}
 /* EMPTY */
 
 .empty-state{
@@ -365,5 +399,17 @@ export default {
   color:#9ca3af;
   margin-top:80px;
   font-size:16px;
+}
+.service-btn{
+  background:#8b5cf6;
+  color:white;
+  border:none;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.service-btn:hover{
+  opacity:0.9;
 }
 </style>

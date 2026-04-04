@@ -1,4 +1,4 @@
-package com.example.server.services;
+package com.example.server.serviceiml;
 
 import com.example.server.dto.CreateContractRequest;
 import com.example.server.dto.CustomerContractDTO;
@@ -6,6 +6,7 @@ import com.example.server.entity.*;
 import com.example.server.enums.RoomStatus;
 import com.example.server.repository.*;
 
+import com.example.server.services.ContractService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

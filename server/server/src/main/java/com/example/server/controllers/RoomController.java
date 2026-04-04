@@ -1,9 +1,17 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.RoomServiceDTO;
+import com.example.server.entity.Building;
 import com.example.server.entity.Rooms;
+import com.example.server.enums.RoomStatus;
 import com.example.server.services.RoomService;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.http.MediaType;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -17,9 +25,33 @@ public class RoomController {
     }
 
     // Thêm phòng
-    @PostMapping
-    public Rooms create(@RequestBody Rooms room) {
-        return roomService.create(room);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Rooms create(
+            @RequestParam String roomCode,
+            @RequestParam String roomName,
+            @RequestParam Double price,
+            @RequestParam Double area,
+            @RequestParam Integer maxPeople,
+            @RequestParam String status,
+            @RequestParam String description,
+            @RequestParam Long buildingId,
+            @RequestParam(required = false) List<MultipartFile> images
+    ) {
+
+        Rooms room = new Rooms();
+        room.setRoomCode(roomCode);
+        room.setRoomName(roomName);
+        room.setPrice(BigDecimal.valueOf(price));
+        room.setArea(BigDecimal.valueOf(area));
+        room.setMaxPeople(maxPeople);
+        room.setStatus(RoomStatus.valueOf(status));
+        room.setDescription(description);
+
+        Building b = new Building();
+        b.setId(buildingId);
+        room.setBuilding(b);
+
+        return roomService.createWithImages(room, images);
     }
 
     // Lấy tất cả
@@ -41,10 +73,34 @@ public class RoomController {
     }
 
     // Cập nhật
-    @PutMapping("/{id}")
-    public Rooms update(@PathVariable Long id,
-                        @RequestBody Rooms room) {
-        return roomService.update(id, room);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Rooms update(
+            @PathVariable Long id,
+            @RequestParam String roomCode,
+            @RequestParam String roomName,
+            @RequestParam Double price,
+            @RequestParam Double area,
+            @RequestParam Integer maxPeople,
+            @RequestParam String status,
+            @RequestParam String description,
+            @RequestParam Long buildingId,
+            @RequestParam(required = false) List<MultipartFile> images
+    ) {
+
+        Rooms room = new Rooms();
+        room.setRoomCode(roomCode);
+        room.setRoomName(roomName);
+        room.setPrice(BigDecimal.valueOf(price));
+        room.setArea(BigDecimal.valueOf(area));
+        room.setMaxPeople(maxPeople);
+        room.setStatus(RoomStatus.valueOf(status));
+        room.setDescription(description);
+
+        Building b = new Building();
+        b.setId(buildingId);
+        room.setBuilding(b);
+
+        return roomService.updateWithImages(id, room, images);
     }
 
     // Xóa
@@ -52,4 +108,9 @@ public class RoomController {
     public void delete(@PathVariable Long id) {
         roomService.delete(id);
     }
+    @GetMapping("/{id}/services")
+    public List<RoomServiceDTO> getServicesByRoom(@PathVariable Long id) {
+        return roomService.getServicesByRoom(id);
+    }
+
 }

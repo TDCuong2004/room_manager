@@ -7,7 +7,6 @@
       <button @click="goBuildings">
         🏢 Buildings
       </button>
-
       <button @click="goServices">
         🛠 Services
       </button>

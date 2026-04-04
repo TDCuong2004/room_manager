@@ -12,15 +12,15 @@ public class MeterReading {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String month;
-    private Integer oldValue;
-    private Integer newValue;
-
     @ManyToOne
     @JoinColumn(name = "room_id")
     private Rooms room;
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private ServiceEntity service;
+    private ServiceEntity  service;
+
+    private String month;
+    private Integer oldValue;
+    private Integer newValue;
 }

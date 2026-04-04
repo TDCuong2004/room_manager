@@ -32,7 +32,7 @@
           :key="s.id"
         >
 
-          <td>{{ s.service?.serviceName }}</td>
+          <td>{{ s.serviceName }}</td>
 
           <td>{{ formatMoney(s.price) }} đ</td>
 
