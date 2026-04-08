@@ -2,6 +2,7 @@ package com.example.server.controllers;
 
 import com.example.server.dto.MeterDTO;
 import com.example.server.dto.MeterReadingRequest;
+import com.example.server.dto.MeterReadingViewDTO;
 import com.example.server.entity.MeterReading;
 import com.example.server.services.MeterReadingService;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,18 @@ public class MeterReadingController {
         service.saveAll(list);
     }
 
+    @GetMapping
+    public List<MeterReadingViewDTO> getAll(
+            @RequestParam String month,
+            @RequestParam Long serviceId,
+            @RequestParam Long buildingId
+    ){
+        System.out.println("month = " + month);
+        System.out.println("serviceId = " + serviceId);
+        System.out.println("buildingId = " + buildingId);
+
+        return service.getAll(month, serviceId, buildingId);
+    }
     // ✅ Lấy chỉ số gần nhất (auto fill)
     @GetMapping("/last")
     public MeterReading getLast(

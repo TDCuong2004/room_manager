@@ -10,8 +10,7 @@ import java.util.List;
 
 public interface PostService {
 
-    // tạo bài đăng
-    PostEntity create(PostDTO dto, String username);
     List<PostResponse> getAll();
 
+    PostEntity create(PostDTO dto, String username, List<MultipartFile> files);
 }

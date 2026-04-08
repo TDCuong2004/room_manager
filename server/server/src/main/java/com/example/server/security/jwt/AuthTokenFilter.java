@@ -6,12 +6,12 @@ import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
 
@@ -27,24 +27,38 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String headerAuth = request.getHeader("Authorization");
+        try {
+            String headerAuth = request.getHeader("Authorization");
 
-        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
-            String token = headerAuth.substring(7);
-            String username = jwtUtils.getUsernameFromToken(token);
+            if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
 
-            var userDetails = userDetailsService.loadUserByUsername(username);
+                String token = headerAuth.substring(7);
 
-            var authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
+                String username = jwtUtils.getUsernameFromToken(token);
 
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request));
+                if (username != null &&
+                        SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UserDetails userDetails =
+                            userDetailsService.loadUserByUsername(username);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities());
+
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request));
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("JWT ERROR: " + e.getMessage()); // 🔥 debug
         }
 
         filterChain.doFilter(request, response);

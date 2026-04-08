@@ -26,11 +26,24 @@ public class JwtUtils {
     }
 
     public String getUsernameFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (ExpiredJwtException e) {
+            System.out.println("JWT hết hạn");
+        } catch (UnsupportedJwtException e) {
+            System.out.println("JWT không hỗ trợ");
+        } catch (MalformedJwtException e) {
+            System.out.println("JWT sai format");
+        } catch (SignatureException e) {
+            System.out.println("Sai chữ ký JWT");
+        } catch (IllegalArgumentException e) {
+            System.out.println("JWT rỗng");
+        }
+        return null; // 🔥 cực kỳ quan trọng
     }
 }

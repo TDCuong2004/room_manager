@@ -14,43 +14,65 @@
         <router-link to="/guide" class="menu-item">Hướng dẫn thuê</router-link>
       </nav>
 
-<div class="right-section">
+      <div class="right-section">
 
-  <!-- CHƯA LOGIN -->
-  <template v-if="!isLoggedIn">
-    <router-link to="/login" class="auth-btn">
-      Đăng nhập
-    </router-link>
-  </template>
+        <!-- ❌ CHƯA LOGIN -->
+        <template v-if="!isLoggedIn">
+          <router-link to="/login" class="auth-btn">
+            Đăng nhập
+          </router-link>
+        </template>
 
-  <!-- ĐÃ LOGIN -->
-  <div v-else class="user-menu">
-    <div class="avatar" @click="toggleDropdown">
+        <!-- ✅ ĐÃ LOGIN -->
+        <div v-else class="user-menu">
 
-      <img v-if="user.avatar" :src="user.avatar" />
+          <!-- 🔔 NOTIFICATION -->
+          <div class="notification">
+            <div class="bell" @click="toggleNotify">
+              🔔
+              <span v-if="expiringContracts.length > 0" class="badge">
+                {{ expiringContracts.length }}
+              </span>
+            </div>
 
-      <span v-else>
-        {{ user.fullName?.charAt(0) || "U" }}
-      </span>
+            <!-- POPUP -->
+            <div v-if="showNotify" class="notify-dropdown">
+              <div v-if="expiringContracts.length === 0">
+                Không có thông báo
+              </div>
 
+              <div
+                v-for="c in expiringContracts"
+                :key="c.id"
+                class="notify-item"
+              >
+                <p>Phòng {{ c.room.roomName }} sắp hết hạn</p>
+                <button @click="renew(c.id)">Gia hạn</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AVATAR -->
+          <div class="avatar" @click="toggleDropdown">
+            <img v-if="user.avatar" :src="user.avatar" />
+            <span v-else>
+              {{ user.fullName?.charAt(0) || "U" }}
+            </span>
+          </div>
+
+          <!-- DROPDOWN -->
+          <div v-if="showDropdown" class="dropdown">
+            <button @click="confirmLogout">Đăng xuất</button>
+            <router-link to="/dashboard">Phòng của tôi</router-link>
+            <router-link to="/profile">Hồ sơ</router-link>
+          </div>
+
+        </div>
+
+      </div>
     </div>
 
-    <div v-if="showDropdown" class="dropdown">
-      <button @click="confirmLogout">
-        Đăng xuất
-      </button>
-      <router-link to="/dashboard" class="">Phòng của tôi</router-link>
-       <router-link to="/profile" >
-        Hồ sơ
-      </router-link>
-    </div>
-  </div>
-
-</div>
-
-    </div>
-
-    <!-- SEARCH BAR -->
+    <!-- SEARCH -->
     <div class="search-wrapper">
       <div class="search-box">
 
@@ -84,26 +106,24 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue"
+import { ref, watch, onMounted, onBeforeUnmount } from "vue"
 import { useRouter, useRoute } from "vue-router"
-import axios from "axios"
+import api from "@/api"
 
 const router = useRouter()
 const route = useRoute()
 
-const token = localStorage.getItem("token")
-
-const isLoggedIn = ref(!!token)
+// ================= AUTH =================
+const isLoggedIn = ref(false)
 const showDropdown = ref(false)
-
 const user = ref({})
 
-/* 🔥 LẤY USER TỪ LOCALSTORAGE TRƯỚC */
-const storedUser = localStorage.getItem("user")
-
-if (storedUser) {
-  user.value = JSON.parse(storedUser)
+// check login
+const checkLogin = () => {
+  isLoggedIn.value = !!localStorage.getItem("token")
 }
+
+// load user từ localStorage
 const updateUserFromStorage = () => {
   const storedUser = localStorage.getItem("user")
   if (storedUser) {
@@ -111,62 +131,105 @@ const updateUserFromStorage = () => {
   }
 }
 
-onMounted(() => {
-  fetchUser()
+// ================= NOTIFICATION =================
+const expiringContracts = ref([])
+const showNotify = ref(false)
 
-  // 🔥 lắng nghe khi user update
-  window.addEventListener("userUpdated", updateUserFromStorage)
-})
-// lấy profile user
-const fetchUser = async () => {
-  if (!token) return
+// load contracts sắp hết hạn
+const loadExpiring = async () => {
+  if (!localStorage.getItem("token")) return
 
   try {
-    const res = await axios.get("http://localhost:3000/users/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-
-    user.value = res.data
-
-    /* 🔥 LƯU USER */
-    localStorage.setItem("user", JSON.stringify(res.data))
-
+    const res = await api.get("/contracts/expiring-soon")
+    expiringContracts.value = res.data
   } catch (err) {
-    console.error(err)
+    console.error("Load expiring error:", err)
   }
 }
 
-// khi load trang
-onMounted(() => {
-  fetchUser()
-})
+// toggle chuông
+const toggleNotify = () => {
+  showNotify.value = !showNotify.value
+}
 
-// khi đổi route
-watch(route, () => {
-  isLoggedIn.value = !!localStorage.getItem("token")
-  showDropdown.value = false
-})
+// format date chuẩn
+const formatDate = (input) => {
+  const d = new Date(input)
+  if (isNaN(d)) return null
 
-// mở dropdown
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  )
+}
+
+// gia hạn
+const renew = async (id) => {
+  let newDate = prompt("Nhập ngày kết thúc mới (YYYY-MM-DD)")
+  if (!newDate) return
+
+  const formatted = formatDate(newDate)
+
+  if (!formatted) {
+    alert("Sai format ngày (YYYY-MM-DD)")
+    return
+  }
+
+  try {
+    await api.post(`/contracts/${id}/renew?endDate=${formatted}`)
+    alert("Gia hạn thành công")
+    loadExpiring()
+  } catch (err) {
+    console.error(err)
+    alert("Lỗi gia hạn")
+  }
+}
+
+// click ngoài đóng notify
+const handleClickOutside = (e) => {
+  const notify = document.querySelector(".notification")
+  if (notify && !notify.contains(e.target)) {
+    showNotify.value = false
+  }
+}
+
+// ================= USER =================
+const fetchUser = async () => {
+  if (!localStorage.getItem("token")) return
+
+  try {
+    const res = await api.get("/users/profile")
+    user.value = res.data
+    localStorage.setItem("user", JSON.stringify(res.data))
+  } catch (err) {
+    console.error("Profile error:", err)
+  }
+}
+
+// ================= DROPDOWN =================
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
 }
 
 // logout
 const confirmLogout = () => {
-  const ok = window.confirm("Bạn có chắc chắn muốn đăng xuất không?")
-  if (ok) {
+  if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
     localStorage.removeItem("token")
-    localStorage.removeItem("user")   // 🔥 xoá luôn user
-    isLoggedIn.value = false
+    localStorage.removeItem("user")
+
+    checkLogin()
+    user.value = {}
+    expiringContracts.value = []
+
     showDropdown.value = false
     router.push("/")
   }
 }
 
-// SEARCH
+// ================= SEARCH =================
 const search = ref({
   location: "",
   maxPrice: "",
@@ -179,6 +242,35 @@ const handleSearch = () => {
     query: search.value
   })
 }
+
+// ================= 🔥 CORE FIX =================
+
+// khi login / update user → reload toàn bộ
+const handleUserUpdated = () => {
+  checkLogin()
+  updateUserFromStorage()
+  fetchUser()
+  loadExpiring()
+}
+
+// ================= LIFECYCLE =================
+onMounted(() => {
+  handleUserUpdated()
+
+  window.addEventListener("userUpdated", handleUserUpdated)
+  document.addEventListener("click", handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener("userUpdated", handleUserUpdated)
+  document.removeEventListener("click", handleClickOutside)
+})
+
+// ================= WATCH =================
+watch(route, () => {
+  checkLogin()
+  showDropdown.value = false
+})
 </script>
 
 <style scoped>
@@ -262,10 +354,11 @@ const handleSearch = () => {
 .auth-btn:hover{
   background:#f7f7f7;
 }
-
-/* USER MENU */
-.user-menu{
-  position:relative;
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
 }
 
 /* AVATAR */
@@ -403,5 +496,79 @@ const handleSearch = () => {
     opacity:1;
     transform:translateY(0);
   }
+}
+
+.notification {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bell {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 16px;
+}
+
+.bell:hover {
+  background: #e5e7eb;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff385c;
+  color: white;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+}
+.notify-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  width: 280px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  padding: 10px;
+  z-index: 999;
+}
+.notify-item {
+  padding: 10px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.notify-item:hover {
+  background: #f9fafb;
+}
+
+.notify-item p {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.notify-item button {
+  background: #ff385c;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
 }
 </style>

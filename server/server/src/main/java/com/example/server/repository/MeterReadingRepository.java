@@ -4,6 +4,7 @@ import com.example.server.entity.Rooms;
 import com.example.server.entity.ServiceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MeterReadingRepository extends JpaRepository<MeterReading, Long> {
@@ -22,4 +23,5 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, Long
             ServiceEntity service,
             String month
     );
+    List<MeterReading> findByServiceAndMonth(ServiceEntity service, String month);
 }

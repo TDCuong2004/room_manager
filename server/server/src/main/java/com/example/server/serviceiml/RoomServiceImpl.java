@@ -11,17 +11,21 @@ import com.example.server.services.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
 
+import java.io.File;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class RoomServiceImpl implements RoomService {
+
     private final ContractCustomerRepository contractCustomerRepository;
     private final RoomRepository roomRepository;
     private final BuildingServiceRepository buildingServiceRepository;
+
     @Autowired
     private RoomImageRepository roomImageRepository;
+
     public RoomServiceImpl(RoomRepository roomRepository,
                            BuildingServiceRepository buildingServiceRepository,
                            ContractCustomerRepository contractCustomerRepository) {
@@ -29,9 +33,14 @@ public class RoomServiceImpl implements RoomService {
         this.buildingServiceRepository = buildingServiceRepository;
         this.contractCustomerRepository = contractCustomerRepository;
     }
+
     @Override
     public Rooms create(Rooms room) {
-        return roomRepository.save(room);
+        room.setRoomCode(null);
+        Rooms saved = roomRepository.save(room);
+        String code = "R" + String.format("%03d", saved.getId());
+        saved.setRoomCode(code);
+        return roomRepository.save(saved);
     }
 
     @Override
@@ -47,23 +56,19 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public List<Rooms> getByBuilding(Long buildingId) {
-
         List<Rooms> rooms = roomRepository.findByBuildingId(buildingId);
 
         for (Rooms room : rooms) {
-
             int count = contractCustomerRepository.countCurrentPeople(room.getId());
-
-            room.setCurrentPeople(count); // 👈 gán vào
+            room.setCurrentPeople(count);
         }
 
         return rooms;
     }
+
     @Override
     public Rooms update(Long id, Rooms roomRequest) {
         Rooms room = getById(id);
-
-        room.setRoomCode(roomRequest.getRoomCode());
         room.setRoomName(roomRequest.getRoomName());
         room.setPrice(roomRequest.getPrice());
         room.setArea(roomRequest.getArea());
@@ -78,44 +83,49 @@ public class RoomServiceImpl implements RoomService {
     public void delete(Long id) {
         roomRepository.deleteById(id);
     }
+
     @Override
     public List<RoomServiceDTO> getServicesByRoom(Long roomId) {
-
         Rooms room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
         Long buildingId = room.getBuilding().getId();
-
         return buildingServiceRepository.getServicesByBuilding(buildingId);
     }
+
+    // ================= CREATE WITH IMAGES =================
     @Override
     public Rooms createWithImages(Rooms room, List<MultipartFile> images) {
 
         Rooms savedRoom = roomRepository.save(room);
 
-        if(images != null){
-            for(MultipartFile file : images){
-                try{
+        if (images != null) {
 
-                    // tạo thư mục nếu chưa có
-                    File dir = new File("uploads");
-                    if(!dir.exists()) dir.mkdirs();
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
 
-                    // tên file
-                    String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
 
-                    File dest = new File("uploads/" + fileName);
+            for (MultipartFile file : images) {
+                try {
+
+                    if (file.isEmpty()) continue;
+
+                    String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+                    File dest = new File(uploadDir + fileName);
                     file.transferTo(dest);
 
-                    // lưu DB
                     RoomImage img = new RoomImage();
                     img.setRoom(savedRoom);
-                    img.setImageUrl("http://localhost:3000/uploads/" + fileName);
+                    img.setImageUrl("/uploads/" + fileName);
 
                     roomImageRepository.save(img);
 
-                }catch(Exception e){
+                } catch (Exception e) {
+                    System.out.println("UPLOAD ERROR:");
                     e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -123,13 +133,11 @@ public class RoomServiceImpl implements RoomService {
         return savedRoom;
     }
 
+    // ================= UPDATE WITH IMAGES =================
     @Override
     public Rooms updateWithImages(Long id, Rooms roomRequest, List<MultipartFile> images) {
 
         Rooms room = getById(id);
-
-        // update field
-        room.setRoomCode(roomRequest.getRoomCode());
         room.setRoomName(roomRequest.getRoomName());
         room.setPrice(roomRequest.getPrice());
         room.setArea(roomRequest.getArea());
@@ -139,23 +147,33 @@ public class RoomServiceImpl implements RoomService {
 
         Rooms savedRoom = roomRepository.save(room);
 
-        // nếu có ảnh mới thì thêm
-        if(images != null){
-            for(MultipartFile file : images){
-                try{
-                    String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        if (images != null) {
 
-                    File dest = new File("uploads/" + fileName);
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            for (MultipartFile file : images) {
+                try {
+
+                    if (file.isEmpty()) continue;
+
+                    String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+                    File dest = new File(uploadDir + fileName);
                     file.transferTo(dest);
 
                     RoomImage img = new RoomImage();
                     img.setRoom(savedRoom);
-                    img.setImageUrl("http://localhost:3000/uploads/" + fileName);
+                    img.setImageUrl("/uploads/" + fileName);
 
                     roomImageRepository.save(img);
 
-                }catch(Exception e){
+                } catch (Exception e) {
+                    System.out.println("UPLOAD ERROR:");
                     e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
             }
         }

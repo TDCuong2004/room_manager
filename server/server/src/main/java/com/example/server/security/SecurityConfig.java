@@ -26,7 +26,8 @@ public class SecurityConfig {
                 .cors(cors -> {}) // 👈 THÊM DÒNG NÀY
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll() // 🔥 THÊM DÒNG NÀY
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

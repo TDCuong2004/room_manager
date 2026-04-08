@@ -10,6 +10,9 @@
       <button @click="goServices">
         🛠 Services
       </button>
+      <button @click="goUtility">
+        ⚡ Utility Readings
+      </button>
       <button @click="goInvoices">
         💰 Invoices
       </button>
@@ -27,6 +30,7 @@
         :buildingId="buildingId"
         @back="goBuildings"
       />
+      <UtilityReadings v-if="currentView === 'utility'" />
       <Services v-if="currentView === 'services'" />
       <InvoicePage v-if="currentView === 'invoices'" />
       <BuildingServices
@@ -47,6 +51,7 @@ import Services from "@/views/ServicePage.vue"
 import BuildingServices from "@/views/BuildingServices.vue"
 import RoomManager from "@/views/RoomManager.vue"
 import InvoicePage from "@/views/InvoicePage.vue"
+import UtilityReadings from "@/views/UtilityReadings.vue"
 const currentView = ref("buildings")
 const buildingId = ref(null)
 
@@ -63,7 +68,9 @@ const openBuildingServices = (id) => {
 const goBuildings = () => {
   currentView.value = "buildings"
 }
-
+const goUtility = () => {
+  currentView.value = "utility"
+}
 const goServices = () => {
   currentView.value = "services"
 }

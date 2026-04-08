@@ -37,8 +37,15 @@ public class BuildingServiceImpl implements BuildingService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         building.setUser(user);
+        building.setBuildingCode(null);
+        // 👉 save lần 1
+        Building saved = buildingRepository.save(building);
+        // 👉 set code
+        String code = "B" + String.format("%03d", saved.getId());
+        saved.setBuildingCode(code);
 
-        return buildingRepository.save(building);
+        // 👉 save lần 2
+        return buildingRepository.save(saved);
     }
 
     // update building

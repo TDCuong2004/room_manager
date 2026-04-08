@@ -29,15 +29,22 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     public ServiceEntity create(ServiceEntity service) {
-        return serviceRepository.save(service);
-    }
 
+        // ✅ check trùng tên
+        if(serviceRepository.existsByServiceName(service.getServiceName())){
+            throw new RuntimeException("Dịch vụ đã tồn tại");
+        }
+
+        ServiceEntity saved = serviceRepository.save(service);
+
+        saved.setServiceCode("SV" + saved.getId());
+
+        return serviceRepository.save(saved);
+    }
     @Override
     public ServiceEntity update(Long id, ServiceEntity updatedService) {
 
         ServiceEntity service = getById(id);
-
-        service.setServiceCode(updatedService.getServiceCode());
         service.setServiceName(updatedService.getServiceName());
         service.setUnit(updatedService.getUnit());
         service.setCalculationType(updatedService.getCalculationType());

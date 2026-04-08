@@ -13,7 +13,7 @@ import ServicePage from "../views/ServicePage.vue"
 import RentRoom from "@/views/RentRoom.vue"
 import BuildingServices from "@/views/BuildingServices.vue"
 import InvoicePage from "@/views/InvoicePage.vue"
-
+import ContractPreview from "@/views/ContractPreview.vue"
 const routes = [
   {
     path: "/",
@@ -74,6 +74,10 @@ const routes = [
   {
     path: "/invoices",
     component: () => import("../views/InvoicePage.vue")
+  },
+  {
+    path: "/contract-preview",
+    component: ContractPreview
   },
 ]
 

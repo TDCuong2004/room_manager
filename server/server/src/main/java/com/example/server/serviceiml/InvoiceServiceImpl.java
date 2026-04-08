@@ -50,9 +50,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             Contract contract = contractOpt.get();
 
-            // số người
             int people = contractCustomerRepository
-                    .findByContractId(contract.getId())
+                    .findByContract_Id(contract.getId())  // ✅ đúng
                     .size();
 
             double total = contract.getRentPrice().doubleValue();

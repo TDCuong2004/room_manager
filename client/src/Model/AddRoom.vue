@@ -8,12 +8,6 @@
         <h2>{{ room ? "Sửa phòng" : "Thêm phòng" }}</h2>
 
         <!-- FORM -->
-
-        <div class="form-group">
-          <label>Mã phòng</label>
-          <input v-model="form.roomCode">
-        </div>
-
         <div class="form-group">
           <label>Tên phòng</label>
           <input v-model="form.roomName">
@@ -99,7 +93,6 @@ export default {
     return{
 
       form:{
-        roomCode:"",
         roomName:"",
         price:0,
         area:0,
@@ -121,7 +114,6 @@ export default {
       this.isEditing = true
 
       this.form = {
-        roomCode: this.room.roomCode,
         roomName: this.room.roomName,
         price: this.room.price,
         area: this.room.area,
@@ -154,16 +146,14 @@ export default {
 
     async save(){
 
-      if(!this.form.roomCode){
-        alert("Nhập mã phòng")
+      if(!this.form.roomName){
+        alert("Nhập tên phòng")
         return
       }
 
       try{
 
         const formData = new FormData()
-
-        formData.append("roomCode", this.form.roomCode)
         formData.append("roomName", this.form.roomName)
         formData.append("price", this.form.price)
         formData.append("area", this.form.area)
@@ -174,7 +164,7 @@ export default {
 
         // append ảnh
         for(let i = 0; i < this.images.length; i++){
-          formData.append("images", this.images[i])
+          formData.append("images[]", this.images[i])
         }
 
         if(this.isEditing){

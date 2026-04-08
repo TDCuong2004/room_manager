@@ -29,7 +29,7 @@
 
 <script setup>
 import { ref } from "vue"
-import axios from "axios"
+import api from "@/api"
 import { useRouter } from "vue-router"
 
 const router = useRouter()
@@ -42,22 +42,36 @@ const handleLogin = async () => {
   error.value = ""
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/auth/login",
-      {
-        username: username.value,
-        password: password.value
-      }
-    )
+    // ✅ dùng đúng api instance
+    const res = await api.post("/auth/login", {
+      username: username.value,
+      password: password.value
+    })
 
-    const user = response.data
+    const token = res.data.token
 
-    localStorage.setItem("token", user.token)
+    if (!token) {
+      throw new Error("Không nhận được token")
+    }
 
-    // 🔥 chuyển về Home
-    router.push({ name: "Home" })
+    // ✅ lưu token TRƯỚC
+    localStorage.setItem("token", token)
+
+    // ✅ QUAN TRỌNG: đợi 1 tick để interceptor lấy token
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    // ✅ gọi profile
+    const profileRes = await api.get("/users/profile")
+
+    localStorage.setItem("user", JSON.stringify(profileRes.data))
+
+    // cập nhật header
+    window.dispatchEvent(new Event("userUpdated"))
+
+    router.push("/")
 
   } catch (err) {
+    console.error(err)
     error.value = "Sai tài khoản hoặc mật khẩu!"
   }
 }

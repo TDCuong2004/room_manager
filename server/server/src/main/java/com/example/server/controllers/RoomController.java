@@ -27,7 +27,6 @@ public class RoomController {
     // Thêm phòng
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Rooms create(
-            @RequestParam String roomCode,
             @RequestParam String roomName,
             @RequestParam Double price,
             @RequestParam Double area,
@@ -39,7 +38,6 @@ public class RoomController {
     ) {
 
         Rooms room = new Rooms();
-        room.setRoomCode(roomCode);
         room.setRoomName(roomName);
         room.setPrice(BigDecimal.valueOf(price));
         room.setArea(BigDecimal.valueOf(area));
@@ -76,7 +74,6 @@ public class RoomController {
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Rooms update(
             @PathVariable Long id,
-            @RequestParam String roomCode,
             @RequestParam String roomName,
             @RequestParam Double price,
             @RequestParam Double area,
@@ -88,7 +85,6 @@ public class RoomController {
     ) {
 
         Rooms room = new Rooms();
-        room.setRoomCode(roomCode);
         room.setRoomName(roomName);
         room.setPrice(BigDecimal.valueOf(price));
         room.setArea(BigDecimal.valueOf(area));

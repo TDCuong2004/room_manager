@@ -1,13 +1,14 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.UpdateProfileRequest;
+import com.example.server.dto.UserProfileDTO;
 import com.example.server.entity.User;
 import com.example.server.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserRepository userRepository;
@@ -16,29 +17,42 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
-    // Lấy profile
+    // ================= GET PROFILE =================
     @GetMapping("/profile")
-    public User getProfile(Principal principal) {
+    public UserProfileDTO getProfile(Principal principal) {
 
-        return userRepository
-                .findByUsername(principal.getName())
-                .orElseThrow();
-    }
-
-    @PutMapping("/profile")
-    public User updateProfile(
-            @RequestBody User updatedUser,
-            Principal principal) {
+        if (principal == null) {
+            throw new RuntimeException("Chưa đăng nhập");
+        }
 
         User user = userRepository
                 .findByUsername(principal.getName())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
-        user.setFullName(updatedUser.getFullName());
-        user.setPhone(updatedUser.getPhone());
-        user.setEmail(updatedUser.getEmail());
-        user.setAvatar(updatedUser.getAvatar()); // thêm dòng này
+        return new UserProfileDTO(user); // ✅ TRẢ DTO
+    }
 
-        return userRepository.save(user);
+    // ================= UPDATE PROFILE =================
+    @PutMapping("/profile")
+    public UserProfileDTO updateProfile(
+            @RequestBody UpdateProfileRequest req,
+            Principal principal) {
+
+        if (principal == null) {
+            throw new RuntimeException("Chưa đăng nhập");
+        }
+
+        User user = userRepository
+                .findByUsername(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        user.setFullName(req.getFullName());
+        user.setPhone(req.getPhone());
+        user.setEmail(req.getEmail());
+        user.setAvatar(req.getAvatar());
+
+        userRepository.save(user);
+
+        return new UserProfileDTO(user);
     }
 }

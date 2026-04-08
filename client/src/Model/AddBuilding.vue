@@ -5,12 +5,6 @@
       <h2>Thêm Nhà Trọ</h2>
 
       <form @submit.prevent="handleSubmit">
-
-        <div class="form-group">
-          <label>Mã nhà trọ</label>
-          <input v-model="building.buildingCode" required />
-        </div>
-
         <div class="form-group">
           <label>Tên nhà trọ</label>
           <input v-model="building.buildingName" required />
@@ -51,7 +45,6 @@ import axios from "axios"
 const emit = defineEmits(["close","reload"])
 
 const building = ref({
-  buildingCode: "",
   buildingName: "",
   address: "",
   description: ""

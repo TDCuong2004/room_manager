@@ -3,7 +3,10 @@
 
     <!-- CREATE POST -->
     <div class="create-box" @click="openModal">
-      <img class="avatar" src="https://i.pravatar.cc/40" />
+      <img
+        class="avatar"
+        :src="currentUser?.avatar || 'https://i.pravatar.cc/40'"
+      />
       <input placeholder="Bạn đang nghĩ gì thế?" readonly />
     </div>
 
@@ -11,22 +14,48 @@
     <div class="post" v-for="post in posts" :key="post.id">
 
       <div class="post-header">
-        <img class="avatar" src="https://i.pravatar.cc/40" />
-        <div>
-          <div class="name">Chủ trọ</div>
+  <img
+    class="avatar"
+    :src="post.userAvatar || 'https://i.pravatar.cc/40'"
+  />
+
+  <div>
+    <div class="name">
+      {{ post.userName || "Người dùng" }}
+          </div>
           <div class="time">{{ formatTime(post.createdAt) }}</div>
         </div>
       </div>
-
+      <p class="phone" v-if="post.phone">
+        📞 {{ post.phone }}
+      </p>
       <div class="post-body">
         <h3>{{ post.title }}</h3>
         <p>{{ post.content }}</p>
 
+        <!-- 📍 ADDRESS -->
+        <p class="address" v-if="post.address">
+          📍 {{ post.address }}
+        </p>
+
+        <!-- 🏠 ROOM -->
         <div v-if="post.room" class="room-tag">
           🏠 {{ post.room.roomName }} • {{ post.room.price }}đ
         </div>
       </div>
-      
+
+      <!-- 🗺️ MAP -->
+      <div v-if="post.address" class="map-container">
+        <iframe
+          :src="getMapEmbedUrl(post.address)"
+          width="100%"
+          height="200"
+          style="border:0; border-radius:10px"
+          loading="lazy">
+        </iframe>
+      </div>
+
+      <!-- 🖼️ IMAGES -->
       <div v-if="post.images?.length" class="images">
         <img v-for="img in post.images" :src="img" :key="img" />
       </div>
@@ -58,24 +87,21 @@
           </option>
         </select>
 
-        <!-- ✅ THÔNG TIN PHÒNG (đặt ở đây) -->
+        <!-- ROOM INFO -->
         <div v-if="selectedRoom" class="room-preview">
           <h4>Thông tin phòng</h4>
-
           <p>🏠 {{ selectedRoom.roomName }}</p>
           <p>💰 {{ selectedRoom.price }}đ</p>
           <p>📐 {{ selectedRoom.area }} m²</p>
           <p>👤 {{ selectedRoom.maxPeople }} người</p>
-
-          <p v-if="selectedRoom.description">
-            {{ selectedRoom.description }}
-          </p>
         </div>
+
+        <!-- ADDRESS -->
         <p v-if="selectedBuildingInfo">
           📍 {{ selectedBuildingInfo.address }}
         </p>
 
-        <!-- ✅ MAP -->
+        <!-- MAP -->
         <div v-if="selectedBuildingInfo" class="map-container">
           <iframe
             :src="getMapEmbedUrl(selectedBuildingInfo.address)"
@@ -85,6 +111,7 @@
             loading="lazy">
           </iframe>
         </div>
+
         <!-- UPLOAD -->
         <input type="file" multiple @change="handleImages" />
 
@@ -117,9 +144,10 @@ const rooms = ref([])
 const buildings = ref([])
 
 const showModal = ref(false)
-
 const selectedBuilding = ref("")
 const selectedRoom = ref(null)
+
+const currentUser = ref(JSON.parse(localStorage.getItem("user") || "{}"))
 
 const form = ref({
   title: "",
@@ -131,7 +159,6 @@ const images = ref([])
 const preview = ref([])
 
 // ================= API =================
-
 const fetchPosts = async () => {
   const res = await api.get("/posts")
   posts.value = res.data
@@ -148,7 +175,6 @@ const fetchBuildings = async () => {
 }
 
 // ================= FILTER =================
-
 const filteredRooms = computed(() => {
   return rooms.value.filter(r =>
     r.building?.id == selectedBuilding.value &&
@@ -157,18 +183,15 @@ const filteredRooms = computed(() => {
 })
 
 // ================= WATCH =================
-
 watch(() => form.value.roomId, (id) => {
   selectedRoom.value = rooms.value.find(r => r.id == id)
 
   if (selectedRoom.value) {
-    // chỉ load ảnh phòng
     preview.value = [...(selectedRoom.value.images || [])]
   }
 })
 
 // ================= UI =================
-
 const openModal = () => showModal.value = true
 
 const closeModal = () => {
@@ -178,24 +201,24 @@ const closeModal = () => {
   preview.value = []
   images.value = []
 }
-//Thời gian
+
+// ================= TIME =================
 const formatTime = (time) => {
   const now = new Date()
   const created = new Date(time)
-
-  const diff = Math.floor((now - created) / 1000) // giây
+  const diff = Math.floor((now - created) / 1000)
 
   if (diff < 60) return "Vừa xong"
   if (diff < 3600) return Math.floor(diff / 60) + " phút trước"
   if (diff < 86400) return Math.floor(diff / 3600) + " giờ trước"
 
-  // nếu quá 1 ngày → hiện ngày
   return created.toLocaleString("vi-VN")
 }
-// ================= IMAGE =================
 
+// ================= IMAGE =================
 const handleImages = (e) => {
   images.value = e.target.files
+  preview.value = []
 
   for (let f of images.value) {
     const reader = new FileReader()
@@ -207,7 +230,8 @@ const handleImages = (e) => {
 const removeImage = (index) => {
   preview.value.splice(index, 1)
 }
-// Địa chỉ Tòa
+
+// ================= MAP =================
 const selectedBuildingInfo = computed(() => {
   if (!selectedRoom.value) return null
 
@@ -215,11 +239,12 @@ const selectedBuildingInfo = computed(() => {
     b => Number(b.id) === Number(selectedRoom.value.building?.id || selectedRoom.value.buildingId)
   )
 })
+
 const getMapEmbedUrl = (address) => {
   return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
 }
-// ================= CREATE =================
 
+// ================= CREATE =================
 const createPost = async () => {
   const formData = new FormData()
 
@@ -231,9 +256,7 @@ const createPost = async () => {
     formData.append("images", f)
   }
 
-  await api.post("/posts", formData, {
-    headers: { "Content-Type": "multipart/form-data" }
-  })
+  await api.post("/posts", formData)
 
   closeModal()
   fetchPosts()
@@ -255,23 +278,29 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-/* CREATE */
 .create-box {
   display: flex;
   align-items: center;
   gap: 10px;
   background: white;
-  padding: 10px 15px;
-  border-radius: 20px;
+  padding: 12px 16px;
+  border-radius: 30px;
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .create-box input {
   border: none;
+  outline: none;
   background: #f0f2f5;
-  padding: 10px;
+  padding: 10px 15px;
   border-radius: 20px;
   width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+}
+.create-box:hover {
+  background: #f5f5f5;
 }
 
 /* POST */
@@ -297,11 +326,23 @@ onMounted(() => {
   color: gray;
 }
 
+.address {
+  margin-top: 5px;
+  color: #555;
+}
+
 .room-tag {
   margin-top: 8px;
   background: #e7f3ff;
   padding: 5px 10px;
   border-radius: 10px;
+}
+
+/* AVATAR */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 }
 
 /* IMAGES */
@@ -319,17 +360,11 @@ onMounted(() => {
   border-radius: 10px;
 }
 
-/* AVATAR */
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-/* MODAL */
+/* ===== MODAL ===== */
 .overlay {
   position: fixed;
   inset: 0;
+  z-index: 9999;
   background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
@@ -338,11 +373,23 @@ onMounted(() => {
 
 .modal {
   width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: white;
   padding: 20px;
   border-radius: 15px;
 }
 
+/* SCROLL */
+.modal::-webkit-scrollbar {
+  width: 6px;
+}
+.modal::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+/* INPUT */
 .modal input,
 .modal textarea,
 .modal select {
@@ -386,9 +433,12 @@ onMounted(() => {
 
 /* BUTTON */
 .modal-actions {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding-top: 10px;
   display: flex;
   gap: 10px;
-  margin-top: 15px;
 }
 
 .btn {
@@ -396,8 +446,6 @@ onMounted(() => {
   padding: 12px;
   border-radius: 10px;
   border: none;
-  font-weight: bold;
-  cursor: pointer;
 }
 
 .cancel {
@@ -408,16 +456,18 @@ onMounted(() => {
   background: #1877f2;
   color: white;
 }
+
+/* ROOM */
 .room-preview {
   margin-top: 10px;
   padding: 10px;
   background: #f7f7f7;
   border-radius: 10px;
-  font-size: 14px;
 }
+
+/* MAP */
 .map-container {
   margin-top: 10px;
   border-radius: 10px;
   overflow: hidden;
-}
-</style>
+}</style>
