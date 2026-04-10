@@ -269,187 +269,302 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
+/* Tổng thể nền và font */
 .container {
-  max-width: 600px;
+  max-width: 650px;
   margin: auto;
-  padding: 20px;
+  padding: 24px 15px;
   background: #f0f2f5;
   min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* --- BOX TẠO BÀI VIẾT --- */
 .create-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: white;
+  gap: 12px;
+  background: #ffffff;
   padding: 12px 16px;
-  border-radius: 30px;
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s;
 }
 
-.create-box input {
-  border: none;
-  outline: none;
-  background: #f0f2f5;
-  padding: 10px 15px;
-  border-radius: 20px;
-  width: 100%;
-  cursor: pointer;
-  font-size: 14px;
-}
 .create-box:hover {
   background: #f5f5f5;
 }
 
-/* POST */
+.create-box .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.create-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: #f0f2f5;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #65676b;
+}
+
+/* --- BÀI VIẾT (POST) --- */
 .post {
-  background: white;
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 15px;
+  background: #ffffff;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e5e5;
 }
 
 .post-header {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
+  margin-bottom: 12px;
+}
+
+.post-header .avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #eee;
 }
 
 .name {
-  font-weight: bold;
+  font-weight: 600;
+  color: #050505;
+  font-size: 15px;
 }
 
 .time {
-  font-size: 12px;
-  color: gray;
+  font-size: 13px;
+  color: #65676b;
+}
+
+/* Nội dung bài viết */
+.post-body h3 {
+  margin: 8px 0;
+  font-size: 18px;
+  color: #1c1e21;
+  line-height: 1.4;
+}
+
+.post-body p {
+  font-size: 15px;
+  color: #4b4b4b;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.phone {
+  font-weight: 600;
+  color: #1877f2;
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 
 .address {
-  margin-top: 5px;
-  color: #555;
+  font-size: 13px;
+  color: #65676b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
+/* Thẻ phòng */
 .room-tag {
-  margin-top: 8px;
+  display: inline-block;
+  margin-top: 12px;
   background: #e7f3ff;
-  padding: 5px 10px;
-  border-radius: 10px;
+  color: #1877f2;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-/* AVATAR */
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-/* IMAGES */
+/* Hình ảnh bài viết */
 .images {
-  margin-top: 10px;
+  margin-top: 15px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 5px;
+  gap: 8px;
 }
 
 .images img {
   width: 100%;
-  height: 160px;
+  aspect-ratio: 4 / 3; /* Giữ tỉ lệ ảnh đồng nhất */
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
-/* ===== MODAL ===== */
+/* Bản đồ bài viết */
+.map-container {
+  margin-top: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 200px;
+}
+
+/* --- MODAL TẠO BÀI --- */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px); /* Làm mờ nền */
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .modal {
-  width: 420px;
-  max-height: 90vh;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 85vh;
   overflow-y: auto;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
 }
 
-/* SCROLL */
-.modal::-webkit-scrollbar {
-  width: 6px;
-}
-.modal::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
+.modal h2 {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
 }
 
-/* INPUT */
+/* Input, Select, Textarea trong modal */
 .modal input,
 .modal textarea,
 .modal select {
   width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
   border: 1px solid #ddd;
+  background: #f7f8fa;
+  font-size: 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* PREVIEW */
+.modal input:focus, 
+.modal textarea:focus, 
+.modal select:focus {
+  outline: none;
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+  background: #fff;
+}
+
+.modal textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Xem trước thông tin phòng */
+.room-preview {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f0f7ff;
+  border-left: 4px solid #1877f2;
+  border-radius: 4px 8px 8px 4px;
+}
+
+.room-preview h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #1877f2;
+  text-transform: uppercase;
+}
+
+.room-preview p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+/* Upload & Preview ảnh */
 .preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
 }
 
 .preview-item {
   position: relative;
+  width: 80px;
+  height: 80px;
 }
 
 .preview-item img {
-  width: 70px;
-  height: 70px;
+  width: 100%;
+  height: 100%;
   border-radius: 8px;
   object-fit: cover;
+  border: 1px solid #ddd;
 }
 
 .remove {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background: red;
+  top: -6px;
+  right: -6px;
+  background: #ff3b30;
   color: white;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   font-size: 12px;
-  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* BUTTON */
+/* Nút bấm điều hướng */
 .modal-actions {
   position: sticky;
-  bottom: 0;
+  bottom: -24px;
   background: white;
-  padding-top: 10px;
+  padding: 15px 0 0 0;
+  margin-top: 20px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  border-top: 1px solid #eee;
 }
 
 .btn {
   flex: 1;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
 .cancel {
   background: #e4e6eb;
+  color: #4b4b4b;
 }
 
 .submit {
@@ -457,17 +572,16 @@ onMounted(() => {
   color: white;
 }
 
-/* ROOM */
-.room-preview {
-  margin-top: 10px;
-  padding: 10px;
-  background: #f7f7f7;
-  border-radius: 10px;
+.btn:hover {
+  opacity: 0.9;
 }
 
-/* MAP */
-.map-container {
-  margin-top: 10px;
+/* Scrollbar cho Modal */
+.modal::-webkit-scrollbar {
+  width: 6px;
+}
+.modal::-webkit-scrollbar-thumb {
+  background: #ddd;
   border-radius: 10px;
-  overflow: hidden;
-}</style>
+}
+</style>

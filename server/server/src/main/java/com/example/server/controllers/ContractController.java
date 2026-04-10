@@ -1,5 +1,6 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.ContractDTO;
 import com.example.server.dto.CreateContractRequest;
 import com.example.server.entity.Contract;
 import com.example.server.services.ContractService;
@@ -31,9 +32,12 @@ public class ContractController {
 
     // ================= GET CONTRACT SẮP HẾT HẠN =================
     @GetMapping("/expiring-soon")
-    public ResponseEntity<List<Contract>> getExpiringContracts() {
+    public ResponseEntity<List<ContractDTO>> getExpiringContracts() {
 
-        List<Contract> list = contractService.getExpiringContracts();
+        List<ContractDTO> list = contractService.getExpiringContracts()
+                .stream()
+                .map(ContractDTO::new)
+                .toList();
 
         return ResponseEntity.ok(list);
     }

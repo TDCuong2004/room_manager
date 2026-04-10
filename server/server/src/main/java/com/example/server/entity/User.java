@@ -26,6 +26,6 @@ public class User {
     private String phone;
     private String email;
 
-    @Lob
+    @Column(length = 255)
     private String avatar;
 }

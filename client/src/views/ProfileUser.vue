@@ -1,65 +1,3 @@
-<script setup>
-import { ref, onMounted } from "vue"
-import axios from "axios"
-
-const user = ref({
-  fullName: "",
-  phone: "",
-  email: ""
-})
-const handleAvatar = (e) => {
-
-  const file = e.target.files[0]
-
-  const reader = new FileReader()
-
-  reader.onload = () => {
-    user.value.avatar = reader.result
-  }
-
-  reader.readAsDataURL(file)
-}
-
-const token = localStorage.getItem("token")
-
-const fetchProfile = async () => {
-  const res = await axios.get(
-    "http://localhost:3000/users/profile",
-    {
-      headers:{
-        Authorization:`Bearer ${token}`
-      }
-    }
-  )
-
-  user.value = res.data
-}
-
-const updateProfile = async () => {
-
-  const res = await axios.put(
-    "http://localhost:3000/users/profile",
-    user.value,
-    {
-      headers:{
-        Authorization:`Bearer ${token}`
-      }
-    }
-  )
-
-  user.value = res.data
-
-  localStorage.setItem("user", JSON.stringify(res.data))
-
-  // 🔥 báo cho toàn app biết user đã thay đổi
-  window.dispatchEvent(new Event("userUpdated"))
-
-  alert("Cập nhật thành công")
-}
-
-onMounted(fetchProfile)
-</script>
-
 <template>
 <div class="profile-page">
 
@@ -110,6 +48,62 @@ onMounted(fetchProfile)
 
 </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from "vue"
+import api from "@/api"
+
+const user = ref({
+  fullName: "",
+  phone: "",
+  email: "",
+  avatar: ""
+})
+
+// 🔥 upload avatar
+const handleAvatar = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  try {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const res = await api.post("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+
+    // ✅ lưu URL trả về
+    user.value.avatar = res.data
+
+  } catch (err) {
+    console.error(err)
+    alert("Upload avatar thất bại")
+  }
+}
+
+// ================= GET PROFILE =================
+const fetchProfile = async () => {
+  const res = await api.get("/users/profile")
+  user.value = res.data
+}
+
+// ================= UPDATE =================
+const updateProfile = async () => {
+  const res = await api.put("/users/profile", user.value)
+
+  user.value = res.data
+  localStorage.setItem("user", JSON.stringify(res.data))
+
+  window.dispatchEvent(new Event("userUpdated"))
+
+  alert("Cập nhật thành công")
+}
+
+onMounted(fetchProfile)
+</script>
 
 <style scoped>
 .profile-page{

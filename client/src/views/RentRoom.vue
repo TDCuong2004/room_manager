@@ -62,23 +62,37 @@
           </select>
         </div>
 
-        <!-- CCCD -->
+        <!-- CCCD BOX -->
         <div class="cccd-box">
-
           <!-- FRONT -->
-          <div class="upload-box">
-            <label>CCCD trước</label>
-            <input type="file" @change="uploadFile($event, index, 'front')">
-            <img v-if="c.cccdFrontImage" :src="c.cccdFrontImage">
+          <div class="upload-area">
+            <label class="upload-label">
+              <span class="upload-title">CCCD mặt trước</span>
+              <div class="upload-placeholder" :class="{ 'has-img': c.cccdFrontImage }">
+                <img v-if="c.cccdFrontImage" :src="c.cccdFrontImage">
+                <div v-else class="placeholder-content">
+                  <span class="icon">📷</span>
+                  <span>Bấm để tải ảnh</span>
+                </div>
+                <input type="file" @change="uploadFile($event, index, 'front')" hidden>
+              </div>
+            </label>
           </div>
 
           <!-- BACK -->
-          <div class="upload-box">
-            <label>CCCD sau</label>
-            <input type="file" @change="uploadFile($event, index, 'back')">
-            <img v-if="c.cccdBackImage" :src="c.cccdBackImage">
+          <div class="upload-area">
+            <label class="upload-label">
+              <span class="upload-title">CCCD mặt sau</span>
+              <div class="upload-placeholder" :class="{ 'has-img': c.cccdBackImage }">
+                <img v-if="c.cccdBackImage" :src="c.cccdBackImage">
+                <div v-else class="placeholder-content">
+                  <span class="icon">📷</span>
+                  <span>Bấm để tải ảnh</span>
+                </div>
+                <input type="file" @change="uploadFile($event, index, 'back')" hidden>
+              </div>
+            </label>
           </div>
-
         </div>
 
         <!-- ACTION -->
@@ -253,133 +267,327 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-.rent-page{
-  max-width:900px;
-  margin:auto;
-  padding:20px;
+.rent-page {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
-/* HEADER */
-.rent-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
+/* --- HEADER --- */
+.rent-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
-/* CARD */
-.card{
-  background:#fff;
-  padding:20px;
-  border-radius:16px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.08);
-  margin-bottom:20px;
+.rent-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
 }
 
-/* GRID */
-.info-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+.back-btn {
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.form-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+.back-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
-.form-row input{
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ddd;
+/* --- CARD TỔNG THỂ --- */
+.card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+  border: 1px solid #f1f5f9;
 }
 
-/* CUSTOMER */
-.customer-card{
-  border:1px solid #eee;
-  border-radius:12px;
-  padding:15px;
-  margin-bottom:15px;
-  background:#fafafa;
+.card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.customer-info{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-bottom:10px;
+/* --- THÔNG TIN PHÒNG (GRID) --- */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  background: #f1f5f9;
+  padding: 16px;
+  border-radius: 12px;
 }
 
-.customer-info input,
-.customer-info select{
-  padding:8px;
-  border-radius:8px;
-  border:1px solid #ddd;
+.info-grid p {
+  margin: 0;
+  font-size: 15px;
 }
 
-/* CCCD */
-.cccd-box{
-  display:flex;
-  gap:20px;
-  margin-bottom:10px;
+.info-grid b {
+  color: #64748b;
+  font-weight: 500;
+  margin-right: 5px;
 }
 
-.upload-box{
-  display:flex;
-  flex-direction:column;
-  gap:5px;
+/* --- FORM NHẬP LIỆU --- */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
 }
 
-.upload-box img{
-  width:120px;
-  border-radius:8px;
-  border:1px solid #ddd;
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  font-size: 15px;
+  transition: all 0.2s;
+  background: #ffffff;
+  outline: none;
 }
 
-/* ACTION */
-.customer-actions{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+input:focus, select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.remove-btn{
-  background:#ef4444;
-  color:white;
-  border:none;
-  padding:5px 10px;
-  border-radius:6px;
+/* --- KHU VỰC NGƯỜI THUÊ --- */
+.customer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-/* BUTTON */
-.submit-box{
-  text-align:center;
+.customer-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  position: relative;
+  transition: transform 0.2s;
 }
 
-.submit-btn{
-  background:#22c55e;
-  color:white;
-  padding:12px 25px;
-  border:none;
-  border-radius:25px;
+.customer-card:hover {
+  border-color: #cbd5e1;
 }
 
-.add-btn{
-  background:#3b82f6;
-  color:white;
-  border:none;
-  padding:6px 12px;
-  border-radius:20px;
+/* Chia tỷ lệ cột: Tên rộng nhất (2 phần), SĐT (1.5 phần), Năm sinh & Giới tính (1 phần) */
+.customer-info {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 0.8fr 1fr; 
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
-.back-btn{
-  background:#6b7280;
-  color:white;
-  border:none;
-  padding:6px 10px;
-  border-radius:8px;
+/* Tùy chỉnh riêng cho các ô input */
+.customer-info input, 
+.customer-info select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #334155;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
 }
 
+/* Hiệu ứng khi nhấn vào ô nhập liệu */
+.customer-info input:focus, 
+.customer-info select:focus {
+  border-color: #3b82f6;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+/* Làm cho Placeholder (chữ gợi ý) trông nhẹ nhàng hơn */
+.customer-info input::placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* Responsive: Khi màn hình nhỏ (Mobile), tự động chia lại hàng */
+@media (max-width: 768px) {
+  .customer-info {
+    grid-template-columns: 1fr 1fr; /* Chia 2 cột mỗi hàng trên mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .customer-info {
+    grid-template-columns: 1fr; /* 1 cột mỗi hàng trên điện thoại nhỏ */
+  }
+}
+
+/* --- UPLOAD CCCD STYLE MỚI --- */
+.cccd-box {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.upload-area {
+  flex: 1;
+}
+
+.upload-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.upload-placeholder {
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #f8fafc;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.upload-placeholder:hover {
+  border-color: #3b82f6;
+  background: #f0f7ff;
+}
+
+.upload-placeholder.has-img {
+  border-style: solid;
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.placeholder-content .icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.upload-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- ACTION BUTTONS --- */
+.customer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.customer-actions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.remove-btn {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.remove-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.add-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+}
+
+.add-btn:hover {
+  background: #2563eb;
+}
+
+/* --- NÚT GỬI (SUBMIT) --- */
+.submit-box {
+  margin: 40px 0;
+  text-align: center;
+}
+
+.submit-btn {
+  background: #10b981;
+  color: white;
+  padding: 16px 40px;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s;
+}
+
+.submit-btn:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.2);
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  padding: 50px;
+  color: #64748b;
+  font-style: italic;
+}
 </style>

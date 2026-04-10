@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "contracts")
@@ -27,7 +28,9 @@ public class Contract {
     private BigDecimal deposit;
 
     private BigDecimal rentPrice;
-
+    private boolean renewed = false;
     @Enumerated(EnumType.STRING)
     private ContractStatus status;
+    @OneToMany(mappedBy = "contract")
+    private List<ContractCustomer> contractCustomers;
 }

@@ -45,7 +45,6 @@ public class ContractServiceImpl implements ContractService {
             throw new RuntimeException("Phải có ít nhất 1 người thuê");
         }
 
-        // check 1 người đại diện
         long repCount = request.getCustomers()
                 .stream()
                 .filter(CustomerContractDTO::isRepresentative)
@@ -55,12 +54,23 @@ public class ContractServiceImpl implements ContractService {
             throw new RuntimeException("Phải có đúng 1 người đại diện");
         }
 
-        // ================= ROOM =================
         Rooms room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
         if (request.getCustomers().size() > room.getMaxPeople()) {
             throw new RuntimeException("Vượt quá số người tối đa");
+        }
+
+        // ================= CHECK OVERLAP =================
+        boolean overlap = contractRepository.findAll().stream()
+                .anyMatch(c ->
+                        c.getRoom().getId().equals(room.getId()) &&
+                                !(request.getEndDate().isBefore(c.getStartDate()) ||
+                                        request.getStartDate().isAfter(c.getEndDate()))
+                );
+
+        if (overlap) {
+            throw new RuntimeException("Phòng đã có hợp đồng trong khoảng thời gian này");
         }
 
         // ================= CONTRACT =================
@@ -70,7 +80,22 @@ public class ContractServiceImpl implements ContractService {
         contract.setEndDate(request.getEndDate());
         contract.setDeposit(request.getDeposit());
         contract.setRentPrice(request.getRentPrice());
-        contract.setStatus(ContractStatus.ACTIVE);
+
+        LocalDate today = LocalDate.now();
+
+        if (!today.isBefore(request.getStartDate())
+                && !today.isAfter(request.getEndDate())) {
+
+            contract.setStatus(ContractStatus.ACTIVE);
+
+        } else if (today.isBefore(request.getStartDate())) {
+
+            contract.setStatus(ContractStatus.PENDING);
+
+        } else {
+
+            contract.setStatus(ContractStatus.EXPIRED);
+        }
 
         contractRepository.save(contract);
 
@@ -82,7 +107,6 @@ public class ContractServiceImpl implements ContractService {
             customer.setPhone(c.getPhone());
             customer.setBirthYear(c.getBirthYear());
 
-            // tránh lỗi null gender
             if (c.getGender() != null) {
                 customer.setGender(Gender.valueOf(c.getGender()));
             }
@@ -93,7 +117,6 @@ public class ContractServiceImpl implements ContractService {
 
             customer = customerRepository.save(customer);
 
-            // mapping contract_customer
             ContractCustomer cc = new ContractCustomer();
             cc.setContract(contract);
             cc.setCustomer(customer);
@@ -106,6 +129,7 @@ public class ContractServiceImpl implements ContractService {
         room.setStatus(RoomStatus.RENTED);
         roomRepository.save(room);
     }
+
     @Override
     public List<Contract> getExpiringContracts() {
         LocalDate today = LocalDate.now();
@@ -125,18 +149,48 @@ public class ContractServiceImpl implements ContractService {
             throw new RuntimeException("Chỉ gia hạn contract ACTIVE");
         }
 
-        // tạo contract mới
+        LocalDate newStartDate = old.getEndDate().plusDays(1);
+
+        // ================= CHECK OVERLAP =================
+        boolean overlap = contractRepository.findAll().stream()
+                .anyMatch(c ->
+                        c.getRoom().getId().equals(old.getRoom().getId()) &&
+                                !(newEndDate.isBefore(c.getStartDate()) ||
+                                        newStartDate.isAfter(c.getEndDate()))
+                );
+
+        if (overlap) {
+            throw new RuntimeException("Hợp đồng mới bị trùng thời gian");
+        }
+
+        // ================= CREATE NEW CONTRACT =================
         Contract newContract = new Contract();
         newContract.setRoom(old.getRoom());
-        newContract.setStartDate(old.getEndDate().plusDays(1));
+        newContract.setStartDate(newStartDate);
         newContract.setEndDate(newEndDate);
         newContract.setDeposit(old.getDeposit());
         newContract.setRentPrice(old.getRentPrice());
-        newContract.setStatus(ContractStatus.ACTIVE);
+
+        LocalDate today = LocalDate.now();
+
+        if (!today.isBefore(newStartDate)
+                && !today.isAfter(newEndDate)) {
+
+            newContract.setStatus(ContractStatus.ACTIVE);
+
+        } else if (today.isBefore(newStartDate)) {
+
+            newContract.setStatus(ContractStatus.PENDING);
+
+        } else {
+
+            newContract.setStatus(ContractStatus.EXPIRED);
+        }
 
         contractRepository.save(newContract);
-
-        // copy danh sách người
+        old.setRenewed(true);
+        contractRepository.save(old);
+        // ================= COPY CUSTOMERS =================
         List<ContractCustomer> oldCustomers =
                 contractCustomerRepository.findByContract_Id(old.getId());
 

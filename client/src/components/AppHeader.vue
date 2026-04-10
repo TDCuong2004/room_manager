@@ -46,8 +46,19 @@
                 :key="c.id"
                 class="notify-item"
               >
-                <p>Phòng {{ c.room.roomName }} sắp hết hạn</p>
-                <button @click="renew(c.id)">Gia hạn</button>
+                <p>
+                  Phòng {{ c.roomName }} sắp hết hạn <br>
+
+                  <small>
+                    Người thuê:
+                    <span v-if="c.customers?.length">
+                      {{ c.customers.join(", ") }}
+                    </span>
+                    <span v-else>Không có</span>
+                  </small>
+                </p>
+
+                <button @click="openRenew(c)">Gia hạn</button>
               </div>
             </div>
           </div>
@@ -103,6 +114,50 @@
     </div>
 
   </header>
+<!-- 🔥 MODAL GIA HẠN -->
+<div v-if="showRenewModal" class="modal-overlay" @click.self="showRenewModal = false">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>Gia hạn hợp đồng</h3>
+      <button class="close-btn" @click="showRenewModal = false">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="info-card">
+        <div class="info-row">
+          <span class="label">Phòng:</span>
+          <span class="value">{{ selectedContract?.roomName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Người thuê:</span>
+          <span class="value">
+            {{ selectedContract?.customers?.length ? selectedContract.customers.join(", ") : "Không có" }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="label">Hết hạn hiện tại:</span>
+          <span class="value highlight">{{ selectedContract?.endDate }}</span>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Ngày kết thúc mới</label>
+        <input
+          type="date"
+          v-model="newEndDate"
+          :min="selectedContract?.endDate"
+          class="date-input"
+        />
+        <small class="hint">Vui lòng chọn ngày kết thúc tiếp theo cho hợp đồng này.</small>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" @click="showRenewModal = false">Hủy bỏ</button>
+      <button class="btn-primary" @click="submitRenew">Xác nhận gia hạn</button>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup>
@@ -130,7 +185,39 @@ const updateUserFromStorage = () => {
     user.value = JSON.parse(storedUser)
   }
 }
+// ================= 🔥 MODAL =================
+const showRenewModal = ref(false)
+const selectedContract = ref(null)
+const newEndDate = ref("")
 
+const openRenew = (contract) => {
+  selectedContract.value = contract
+  newEndDate.value = ""
+  showRenewModal.value = true
+}
+
+const submitRenew = async () => {
+  if (!newEndDate.value) {
+    alert("Vui lòng chọn ngày")
+    return
+  }
+
+  try {
+    await api.post(
+      `/contracts/${selectedContract.value.id}/renew`,
+      null,
+      { params: { endDate: newEndDate.value } }
+    )
+
+    alert("Gia hạn thành công")
+    showRenewModal.value = false
+    loadExpiring()
+
+  } catch (err) {
+    console.error(err)
+    alert("Lỗi gia hạn")
+  }
+}
 // ================= NOTIFICATION =================
 const expiringContracts = ref([])
 const showNotify = ref(false)
@@ -164,28 +251,6 @@ const formatDate = (input) => {
     "-" +
     String(d.getDate()).padStart(2, "0")
   )
-}
-
-// gia hạn
-const renew = async (id) => {
-  let newDate = prompt("Nhập ngày kết thúc mới (YYYY-MM-DD)")
-  if (!newDate) return
-
-  const formatted = formatDate(newDate)
-
-  if (!formatted) {
-    alert("Sai format ngày (YYYY-MM-DD)")
-    return
-  }
-
-  try {
-    await api.post(`/contracts/${id}/renew?endDate=${formatted}`)
-    alert("Gia hạn thành công")
-    loadExpiring()
-  } catch (err) {
-    console.error(err)
-    alert("Lỗi gia hạn")
-  }
 }
 
 // click ngoài đóng notify
@@ -570,5 +635,176 @@ watch(route, () => {
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
+}
+/* --- MODERN MODAL STYLES --- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px); /* Làm mờ nền sau modal */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-container {
+  background: white;
+  width: 100%;
+  max-width: 450px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+/* Thẻ chứa thông tin hiện tại */
+.info-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-row .label {
+  color: #717171;
+}
+
+.info-row .value {
+  font-weight: 600;
+  color: #222;
+}
+
+.info-row .value.highlight {
+  color: #ff385c;
+}
+
+/* Input Group */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+}
+
+.date-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.date-input:focus {
+  border-color: #ff385c;
+  box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+}
+
+.hint {
+  font-size: 12px;
+  color: #717171;
+}
+
+/* Footer & Buttons */
+.modal-footer {
+  padding: 16px 24px;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-primary {
+  background: #ff385c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-primary:hover {
+  background: #e31c5f;
+}
+
+.btn-secondary {
+  background: white;
+  color: #222;
+  border: 1px solid #ddd;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f7f7f7;
+  border-color: #222;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 </style>
