@@ -22,6 +22,7 @@ public class BuildingServiceServiceImpl implements BuildingServiceService {
 
         return repository.findByBuildingId(buildingId)
                 .stream()
+                .filter(bs -> bs.getService().getCalculationType().name().equals("BY_METER"))
                 .map(bs -> {
 
                     BuildingServiceDTO dto = new BuildingServiceDTO();

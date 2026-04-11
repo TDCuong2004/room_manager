@@ -4,6 +4,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class CreateContractRequest {
@@ -17,5 +18,7 @@ public class CreateContractRequest {
     private BigDecimal rentPrice;
 
     private List<CustomerContractDTO> customers;
+    private Map<Long, Double> meterOldValues;
+
 
 }

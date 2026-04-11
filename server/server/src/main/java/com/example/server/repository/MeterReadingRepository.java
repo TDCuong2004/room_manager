@@ -23,5 +23,10 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, Long
             ServiceEntity service,
             String month
     );
+    Optional<MeterReading> findTopByRoomAndServiceAndMonthLessThanOrderByMonthDesc(
+            Rooms room,
+            ServiceEntity service,
+            String month
+    );
     List<MeterReading> findByServiceAndMonth(ServiceEntity service, String month);
 }

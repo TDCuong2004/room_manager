@@ -41,13 +41,17 @@ public class MeterReadingServiceImpl implements MeterReadingService {
             Rooms room = roomRepository.findById(dto.roomId).orElseThrow();
             ServiceEntity service = serviceRepository.findById(dto.serviceId).orElseThrow();
 
-            // 🔥 check existing (KHÔNG throw nữa)
+            String type = service.getCalculationType().name();
+
+            // ❌ bỏ dịch vụ không phải meter
+            if (!type.equals("BY_METER")) return null;
+
             MeterReading existing = repo
                     .findByRoomAndServiceAndMonth(room, service, dto.month)
                     .orElse(null);
 
             if (existing != null) {
-                existing.setNewValue(dto.newValue);
+                existing.setNewValue(dto.newValue != null ? dto.newValue : 0.0);
                 return existing;
             }
 
@@ -56,24 +60,19 @@ public class MeterReadingServiceImpl implements MeterReadingService {
             m.setService(service);
             m.setMonth(dto.month);
 
-            // 🔥 oldValue auto
+            // 🔥 LẤY THÁNG TRƯỚC (QUAN TRỌNG)
             MeterReading last = repo
-                    .findTopByRoomAndServiceOrderByMonthDesc(room, service)
+                    .findTopByRoomAndServiceAndMonthLessThanOrderByMonthDesc(
+                            room, service, dto.month
+                    )
                     .orElse(null);
 
-            m.setOldValue(last != null ? last.getNewValue() : 0);
-
-            String type = service.getCalculationType().name();
-
-            if (type.equals("BY_METER")) {
-                m.setNewValue(dto.newValue != null ? dto.newValue : 0);
-            } else {
-                m.setNewValue(1); // FIXED / BY_PERSON (tạm)
-            }
+            m.setOldValue(last != null ? last.getNewValue() : 0.0);
+            m.setNewValue(dto.newValue != null ? dto.newValue : 0.0);
 
             return m;
 
-        }).toList();
+        }).filter(e -> e != null).toList();
 
         repo.saveAll(entities);
     }
@@ -96,47 +95,51 @@ public class MeterReadingServiceImpl implements MeterReadingService {
     // ================= GET ALL (🔥 CHO UI) =================
     @Override
     public List<MeterReadingViewDTO> getAll(String month, Long serviceId, Long buildingId) {
-        try {
 
-            List<Rooms> rooms = roomRepository
-                    .findByBuildingIdAndStatus(buildingId, RoomStatus.RENTED);
-            ServiceEntity service = serviceRepository.findById(serviceId)
-                    .orElseThrow(() -> new RuntimeException("Service not found"));
+        List<Rooms> rooms = roomRepository
+                .findByBuildingIdAndStatus(buildingId, RoomStatus.RENTED);
 
-            return rooms.stream().map(room -> {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
 
-                MeterReading current = repo
-                        .findByRoomAndServiceAndMonth(room, service, month)
-                        .orElse(null);
-
-                MeterReading last = repo
-                        .findTopByRoomAndServiceOrderByMonthDesc(room, service)
-                        .orElse(null);
-
-                MeterReadingViewDTO dto = new MeterReadingViewDTO();
-
-                dto.setRoomId(room.getId());
-                dto.setRoomName(room.getRoomName());
-
-                String customerName = contractCustomerRepository
-                        .findRepresentativeName(room.getId())
-                        .orElse("Chưa có");
-
-                dto.setCustomerName(customerName);
-
-                dto.setServiceId(service.getId());
-                dto.setServiceName(service.getServiceName());
-
-                dto.setOldValue(last != null ? last.getNewValue() : 0);
-                dto.setNewValue(current != null ? current.getNewValue() : null);
-
-                return dto;
-
-            }).toList();
-
-        } catch (Exception e) {
-            e.printStackTrace(); // 🔥 in lỗi thật
-            throw new RuntimeException("Lỗi load meter readings: " + e.getMessage());
+        // ❌ nếu không phải meter → return rỗng
+        if (!service.getCalculationType().name().equals("BY_METER")) {
+            return List.of();
         }
+
+        return rooms.stream().map(room -> {
+
+            MeterReading current = repo
+                    .findByRoomAndServiceAndMonth(room, service, month)
+                    .orElse(null);
+
+            // 🔥 lấy tháng trước
+            MeterReading last = repo
+                    .findTopByRoomAndServiceAndMonthLessThanOrderByMonthDesc(
+                            room, service, month
+                    )
+                    .orElse(null);
+
+            MeterReadingViewDTO dto = new MeterReadingViewDTO();
+
+            dto.setRoomId(room.getId());
+            dto.setRoomName(room.getRoomName());
+
+            String customerName = contractCustomerRepository
+                    .findRepresentativeName(room.getId())
+                    .orElse("Chưa có");
+
+            dto.setCustomerName(customerName);
+
+            dto.setServiceId(service.getId());
+            dto.setServiceName(service.getServiceName());
+
+            dto.setOldValue(last != null ? last.getNewValue() : 0.0);
+            dto.setNewValue(current != null ? current.getNewValue() : null);
+
+            return dto;
+
+        }).toList();
     }
+
 }

@@ -1,4 +1,4 @@
-:root {
+/* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -9,7 +9,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* RESET */
 * {
   margin: 0;
   padding: 0;
@@ -22,15 +21,13 @@ body {
   background: #ffffff;
 }
 
-/* Layout giống Airbnb */
 #app {
   width: 100%;
-  max-width: 1600px;      /* 👈 rộng hơn 1280 */
-  margin: 0 auto;         /* 👈 căn giữa */
-  padding: 0 48px;        /* 👈 cách 2 bên giống Airbnb */
+  max-width: 1600px;      
+  margin: 0 auto;         
+  padding: 0 48px;        
 }
 
-/* Responsive giống Airbnb */
 @media (max-width: 1440px) {
   #app {
     padding: 0 40px;
@@ -47,4 +44,5 @@ body {
   #app {
     padding: 0 16px;
   }
-}
+} */
+ @import "tailwindcss";

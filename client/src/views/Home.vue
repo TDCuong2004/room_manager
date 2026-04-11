@@ -1,587 +1,241 @@
 <template>
-  <div class="container">
-
-    <!-- CREATE POST -->
-    <div class="create-box" @click="openModal">
-      <img
-        class="avatar"
-        :src="currentUser?.avatar || 'https://i.pravatar.cc/40'"
-      />
-      <input placeholder="Bạn đang nghĩ gì thế?" readonly />
-    </div>
-
-    <!-- POSTS -->
-    <div class="post" v-for="post in posts" :key="post.id">
-
-      <div class="post-header">
-  <img
-    class="avatar"
-    :src="post.userAvatar || 'https://i.pravatar.cc/40'"
-  />
-
-  <div>
-    <div class="name">
-      {{ post.userName || "Người dùng" }}
-          </div>
-          <div class="time">{{ formatTime(post.createdAt) }}</div>
-        </div>
-      </div>
-      <p class="phone" v-if="post.phone">
-        📞 {{ post.phone }}
-      </p>
-      <div class="post-body">
-        <h3>{{ post.title }}</h3>
-        <p>{{ post.content }}</p>
-
-        <!-- 📍 ADDRESS -->
-        <p class="address" v-if="post.address">
-          📍 {{ post.address }}
-        </p>
-
-        <!-- 🏠 ROOM -->
-        <div v-if="post.room" class="room-tag">
-          🏠 {{ post.room.roomName }} • {{ post.room.price }}đ
+  <div class="min-h-screen bg-gray-100 py-6 px-4 font-sans text-gray-900">
+    <div class="max-w-[850px] mx-auto space-y-4">
+      
+      <div 
+        class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
+        @click="openModal"
+      >
+        <img
+          class="w-10 h-10 rounded-full object-cover border border-gray-100"
+          :src="currentUser?.avatar || 'https://i.pravatar.cc/40'"
+        />
+        <div class="flex-1 bg-gray-100 hover:bg-gray-200 py-2.5 px-5 rounded-full text-gray-500 text-[15px] transition-colors font-medium">
+          Bạn đang nghĩ gì thế?
         </div>
       </div>
 
-      <!-- 🗺️ MAP -->
-      <div v-if="post.address" class="map-container">
-        <iframe
-          :src="getMapEmbedUrl(post.address)"
-          width="100%"
-          height="200"
-          style="border:0; border-radius:10px"
-          loading="lazy">
-        </iframe>
-      </div>
-
-      <!-- 🖼️ IMAGES -->
-      <div v-if="post.images?.length" class="images">
-        <img v-for="img in post.images" :src="img" :key="img" />
-      </div>
-
-    </div>
-
-    <!-- MODAL -->
-    <div v-if="showModal" class="overlay" @click.self="closeModal">
-      <div class="modal">
-
-        <h2>Tạo bài viết</h2>
-
-        <input v-model="form.title" placeholder="Tiêu đề" />
-        <textarea v-model="form.content" placeholder="Bạn đang nghĩ gì?"></textarea>
-
-        <!-- CHỌN TÒA -->
-        <select v-model="selectedBuilding">
-          <option value="">-- Chọn tòa --</option>
-          <option v-for="b in buildings" :key="b.id" :value="b.id">
-            {{ b.buildingName }}
-          </option>
-        </select>
-
-        <!-- CHỌN PHÒNG -->
-        <select v-model="form.roomId">
-          <option value="">-- Chọn phòng --</option>
-          <option v-for="r in filteredRooms" :key="r.id" :value="r.id">
-            {{ r.roomName }} - {{ r.price }}đ
-          </option>
-        </select>
-
-        <!-- ROOM INFO -->
-        <div v-if="selectedRoom" class="room-preview">
-          <h4>Thông tin phòng</h4>
-          <p>🏠 {{ selectedRoom.roomName }}</p>
-          <p>💰 {{ selectedRoom.price }}đ</p>
-          <p>📐 {{ selectedRoom.area }} m²</p>
-          <p>👤 {{ selectedRoom.maxPeople }} người</p>
-        </div>
-
-        <!-- ADDRESS -->
-        <p v-if="selectedBuildingInfo">
-          📍 {{ selectedBuildingInfo.address }}
-        </p>
-
-        <!-- MAP -->
-        <div v-if="selectedBuildingInfo" class="map-container">
-          <iframe
-            :src="getMapEmbedUrl(selectedBuildingInfo.address)"
-            width="100%"
-            height="250"
-            style="border:0; border-radius:10px"
-            loading="lazy">
-          </iframe>
-        </div>
-
-        <!-- UPLOAD -->
-        <input type="file" multiple @change="handleImages" />
-
-        <!-- PREVIEW -->
-        <div class="preview">
-          <div v-for="(img, index) in preview" :key="index" class="preview-item">
-            <img :src="img" />
-            <span class="remove" @click="removeImage(index)">✕</span>
+      <div v-for="post in posts" :key="post.id" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-4 flex items-center gap-3 border-b border-gray-50">
+          <img
+            class="w-11 h-11 rounded-full border border-gray-100 object-cover"
+            :src="post.userAvatar || 'https://i.pravatar.cc/40'"
+          />
+          <div class="flex-1">
+            <div class="font-bold text-gray-900 text-[15px] leading-tight">{{ post.userName || "Người dùng" }}</div>
+            <div class="text-xs text-gray-400 mt-0.5">{{ formatTime(post.createdAt) }}</div>
           </div>
         </div>
 
-        <!-- ACTION -->
-        <div class="modal-actions">
-          <button class="btn cancel" @click="closeModal">Hủy</button>
-          <button class="btn submit" @click="createPost">Đăng bài</button>
+        <div class="px-4 py-4 space-y-3">
+          <div v-if="post.phone" class="text-blue-600 font-bold text-sm flex items-center gap-1.5">
+            <span class="bg-blue-100 p-1 rounded-md text-[10px]">📞</span> {{ post.phone }}
+          </div>
+          
+          <h3 class="font-bold text-lg text-gray-900 leading-snug">{{ post.title }}</h3>
+          <p class="text-gray-700 leading-relaxed text-[15px] whitespace-pre-wrap">{{ post.content }}</p>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button 
+              v-if="post.address" 
+              @click="openGoogleMaps(post.address)"
+              class="text-sm text-gray-600 flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 transition-all bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 group"
+            >
+              <span class="group-hover:scale-110 transition-transform text-lg leading-none">📍</span>
+              <span class="font-medium">{{ post.address }}</span>
+            </button>
+
+            <div v-if="post.room" class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-xl text-sm font-bold border border-green-100">
+              🏠 {{ post.room.roomName }} <span class="text-green-200">|</span> {{ formatMoney(post.room.price) }}đ
+            </div>
+          </div>
         </div>
 
+        <div v-if="post.images?.length" class="px-4 pb-4">
+          <div class="grid gap-2" :class="post.images.length > 2 ? 'grid-cols-3' : 'grid-cols-2'">
+            <img 
+              v-for="(img, index) in post.images" 
+              :key="img" 
+              :src="img" 
+              @click="openLightbox(post.images, index)"
+              class="w-full aspect-square object-cover rounded-xl border border-gray-200 hover:opacity-90 transition-all cursor-pointer shadow-sm" 
+            />
+          </div>
+        </div>
       </div>
     </div>
 
+    <div v-if="lightbox.show" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-10">
+      <div class="absolute inset-0 bg-black/85 backdrop-blur-sm" @click="closeLightbox"></div>
+
+      <div class="relative z-10 bg-gray-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-w-6xl w-full h-full max-h-[85vh] border border-white/10">
+        
+        <div class="flex-1 relative flex items-center justify-center p-4 bg-black">
+          <button @click="closeLightbox" class="absolute top-4 left-4 text-white/70 hover:text-white z-20 transition-colors flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full text-sm">
+            <span>✕</span> Đóng
+          </button>
+
+          <button v-if="lightbox.images.length > 1" @click="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full z-20 text-2xl transition-all">‹</button>
+          <button v-if="lightbox.images.length > 1" @click="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full z-20 text-2xl transition-all">›</button>
+
+          <img 
+            :src="lightbox.images[lightbox.index]" 
+            class="max-w-full max-h-full object-contain pointer-events-none transition-all duration-300 select-none"
+          />
+        </div>
+
+        <div 
+          v-if="lightbox.images.length > 1"
+          class="w-full md:w-32 bg-gray-800/50 p-4 flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto custom-scrollbar border-t md:border-t-0 md:border-l border-white/10"
+        >
+          <img 
+            v-for="(img, index) in lightbox.images" 
+            :key="'thumb-'+index"
+            :src="img" 
+            @click="setLightboxIndex(index)"
+            class="w-16 h-16 md:w-24 md:h-24 object-cover rounded-xl cursor-pointer shrink-0 transition-all border-2"
+            :class="lightbox.index === index ? 'border-blue-500 scale-95 opacity-100 ring-4 ring-blue-500/20' : 'border-transparent opacity-40 hover:opacity-100'"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeModal"></div>
+      <div class="bg-white w-full max-w-[500px] rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[85vh]">
+        <div class="p-4 border-b border-gray-100 text-center sticky top-0 bg-white rounded-t-2xl z-20 font-bold text-lg">Tạo bài viết</div>
+        <div class="p-5 overflow-y-auto space-y-5 custom-scrollbar">
+          <input v-model="form.title" placeholder="Tiêu đề bài viết" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+          <textarea v-model="form.content" placeholder="Bạn đang nghĩ gì?" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-h-[120px] resize-none"></textarea>
+          <div class="grid grid-cols-2 gap-3">
+            <select v-model="selectedBuilding" class="p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"><option value="">-- Chọn tòa --</option><option v-for="b in buildings" :key="b.id" :value="b.id">{{ b.buildingName }}</option></select>
+            <select v-model="form.roomId" class="p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"><option value="">-- Chọn phòng --</option><option v-for="r in filteredRooms" :key="r.id" :value="r.id">{{ r.roomName }} - {{ formatMoney(r.price) }}đ</option></select>
+          </div>
+          <div v-if="selectedRoom" class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500 flex justify-between">
+            <div class="text-sm">🏠 <b>{{ selectedRoom.roomName }}</b><br><span class="text-xs text-gray-500">{{ selectedBuildingInfo?.address }}</span></div>
+            <b class="text-blue-700">{{ formatMoney(selectedRoom.price) }}đ</b>
+          </div>
+          <div class="space-y-3">
+            <label class="block w-full border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl p-6 text-center cursor-pointer group transition-all font-semibold text-gray-500">
+              <input type="file" multiple @change="handleImages" class="hidden" />📷 Thêm hình ảnh
+            </label>
+            <div v-if="preview.length" class="grid grid-cols-4 gap-2">
+              <div v-for="(img, index) in preview" :key="index" class="relative aspect-square">
+                <img :src="img" class="w-full h-full object-cover rounded-lg border shadow-sm" />
+                <button @click="removeImage(index)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t flex gap-3"><button @click="closeModal" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors">Hủy</button><button @click="createPost" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95">Đăng bài</button></div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from "vue"
+import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue"
 import api from "@/api"
 
+// --- DATA ---
 const posts = ref([])
 const rooms = ref([])
 const buildings = ref([])
-
 const showModal = ref(false)
 const selectedBuilding = ref("")
 const selectedRoom = ref(null)
-
 const currentUser = ref(JSON.parse(localStorage.getItem("user") || "{}"))
-
-const form = ref({
-  title: "",
-  content: "",
-  roomId: ""
-})
-
+const form = ref({ title: "", content: "", roomId: "" })
 const images = ref([])
 const preview = ref([])
 
-// ================= API =================
-const fetchPosts = async () => {
-  const res = await api.get("/posts")
-  posts.value = res.data
+const lightbox = ref({ show: false, images: [], index: 0 })
+
+// --- UTILS ---
+const formatMoney = (v) => new Intl.NumberFormat("vi-VN").format(v || 0)
+
+const openGoogleMaps = (address) => {
+  if (!address) return
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+  window.open(url, '_blank')
 }
 
-const fetchRooms = async () => {
-  const res = await api.get("/rooms")
-  rooms.value = res.data
-}
-
-const fetchBuildings = async () => {
-  const res = await api.get("/buildings")
-  buildings.value = res.data
-}
-
-// ================= FILTER =================
-const filteredRooms = computed(() => {
-  return rooms.value.filter(r =>
-    r.building?.id == selectedBuilding.value &&
-    r.status === "EMPTY"
-  )
-})
-
-// ================= WATCH =================
-watch(() => form.value.roomId, (id) => {
-  selectedRoom.value = rooms.value.find(r => r.id == id)
-
-  if (selectedRoom.value) {
-    preview.value = [...(selectedRoom.value.images || [])]
-  }
-})
-
-// ================= UI =================
-const openModal = () => showModal.value = true
-
-const closeModal = () => {
-  showModal.value = false
-  selectedBuilding.value = ""
-  form.value = { title: "", content: "", roomId: "" }
-  preview.value = []
-  images.value = []
-}
-
-// ================= TIME =================
 const formatTime = (time) => {
-  const now = new Date()
-  const created = new Date(time)
-  const diff = Math.floor((now - created) / 1000)
-
+  const diff = Math.floor((new Date() - new Date(time)) / 1000)
   if (diff < 60) return "Vừa xong"
   if (diff < 3600) return Math.floor(diff / 60) + " phút trước"
   if (diff < 86400) return Math.floor(diff / 3600) + " giờ trước"
-
-  return created.toLocaleString("vi-VN")
+  return new Date(time).toLocaleDateString("vi-VN")
 }
 
-// ================= IMAGE =================
-const handleImages = (e) => {
-  images.value = e.target.files
-  preview.value = []
+// --- LIGHTBOX LOGIC ---
+const openLightbox = (imageArray, index) => {
+  lightbox.value.images = imageArray
+  lightbox.value.index = index
+  lightbox.value.show = true
+  document.body.style.overflow = 'hidden'
+  window.addEventListener('keydown', handleKeydown)
+}
 
+const closeLightbox = () => {
+  lightbox.value.show = false
+  document.body.style.overflow = ''
+  window.removeEventListener('keydown', handleKeydown)
+}
+
+const setLightboxIndex = (i) => lightbox.value.index = i
+const nextImage = () => lightbox.value.index = (lightbox.value.index + 1) % lightbox.value.images.length
+const prevImage = () => lightbox.value.index = (lightbox.value.index - 1 + lightbox.value.images.length) % lightbox.value.images.length
+
+const handleKeydown = (e) => {
+  if (!lightbox.value.show) return
+  if (e.key === 'Escape') closeLightbox()
+  if (e.key === 'ArrowRight') nextImage()
+  if (e.key === 'ArrowLeft') prevImage()
+}
+
+// --- API LOGIC ---
+const fetchPosts = async () => { const res = await api.get("/posts"); posts.value = res.data }
+const fetchRooms = async () => { const res = await api.get("/rooms"); rooms.value = res.data }
+const fetchBuildings = async () => { const res = await api.get("/buildings"); buildings.value = res.data }
+
+const filteredRooms = computed(() => rooms.value.filter(r => r.building?.id == selectedBuilding.value && r.status === "EMPTY"))
+
+watch(() => form.value.roomId, (id) => {
+  selectedRoom.value = rooms.value.find(r => r.id == id)
+  if (selectedRoom.value) preview.value = [...(selectedRoom.value.images || [])]
+})
+
+const openModal = () => showModal.value = true
+const closeModal = () => { showModal.value = false; selectedBuilding.value = ""; form.value = { title: "", content: "", roomId: "" }; preview.value = []; images.value = [] }
+
+const handleImages = (e) => {
+  images.value = e.target.files; preview.value = []
   for (let f of images.value) {
-    const reader = new FileReader()
-    reader.onload = (ev) => preview.value.push(ev.target.result)
-    reader.readAsDataURL(f)
+    const reader = new FileReader(); reader.onload = (ev) => preview.value.push(ev.target.result); reader.readAsDataURL(f)
   }
 }
+const removeImage = (index) => preview.value.splice(index, 1)
 
-const removeImage = (index) => {
-  preview.value.splice(index, 1)
-}
-
-// ================= MAP =================
 const selectedBuildingInfo = computed(() => {
   if (!selectedRoom.value) return null
-
-  return buildings.value.find(
-    b => Number(b.id) === Number(selectedRoom.value.building?.id || selectedRoom.value.buildingId)
-  )
+  return buildings.value.find(b => Number(b.id) === Number(selectedRoom.value.building?.id || selectedRoom.value.buildingId))
 })
 
-const getMapEmbedUrl = (address) => {
-  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`
-}
-
-// ================= CREATE =================
 const createPost = async () => {
   const formData = new FormData()
-
-  formData.append("title", form.value.title)
-  formData.append("content", form.value.content)
-  formData.append("roomId", form.value.roomId)
-
-  for (let f of images.value) {
-    formData.append("images", f)
-  }
-
+  formData.append("title", form.value.title); formData.append("content", form.value.content); formData.append("roomId", form.value.roomId)
+  for (let f of images.value) formData.append("images", f)
   await api.post("/posts", formData)
-
-  closeModal()
-  fetchPosts()
+  closeModal(); fetchPosts()
 }
 
-onMounted(() => {
-  fetchPosts()
-  fetchRooms()
-  fetchBuildings()
-})
+onMounted(() => { fetchPosts(); fetchRooms(); fetchBuildings() })
+onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); document.body.style.overflow = '' })
 </script>
 
 <style scoped>
-/* Tổng thể nền và font */
-.container {
-  max-width: 650px;
-  margin: auto;
-  padding: 24px 15px;
-  background: #f0f2f5;
-  min-height: 100vh;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-/* --- BOX TẠO BÀI VIẾT --- */
-.create-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #ffffff;
-  padding: 12px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: background 0.2s;
-}
-
-.create-box:hover {
-  background: #f5f5f5;
-}
-
-.create-box .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.create-box input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: #f0f2f5;
-  padding: 10px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 15px;
-  color: #65676b;
-}
-
-/* --- BÀI VIẾT (POST) --- */
-.post {
-  background: #ffffff;
-  margin-top: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e5e5;
-}
-
-.post-header {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.post-header .avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid #eee;
-}
-
-.name {
-  font-weight: 600;
-  color: #050505;
-  font-size: 15px;
-}
-
-.time {
-  font-size: 13px;
-  color: #65676b;
-}
-
-/* Nội dung bài viết */
-.post-body h3 {
-  margin: 8px 0;
-  font-size: 18px;
-  color: #1c1e21;
-  line-height: 1.4;
-}
-
-.post-body p {
-  font-size: 15px;
-  color: #4b4b4b;
-  line-height: 1.5;
-  margin-bottom: 10px;
-}
-
-.phone {
-  font-weight: 600;
-  color: #1877f2;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.address {
-  font-size: 13px;
-  color: #65676b;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Thẻ phòng */
-.room-tag {
-  display: inline-block;
-  margin-top: 12px;
-  background: #e7f3ff;
-  color: #1877f2;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* Hình ảnh bài viết */
-.images {
-  margin-top: 15px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.images img {
-  width: 100%;
-  aspect-ratio: 4 / 3; /* Giữ tỉ lệ ảnh đồng nhất */
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
-}
-
-/* Bản đồ bài viết */
-.map-container {
-  margin-top: 15px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  height: 200px;
-}
-
-/* --- MODAL TẠO BÀI --- */
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px); /* Làm mờ nền */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal {
-  width: 500px;
-  max-width: 90vw;
-  max-height: 85vh;
-  overflow-y: auto;
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-}
-
-.modal h2 {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-}
-
-/* Input, Select, Textarea trong modal */
-.modal input,
-.modal textarea,
-.modal select {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background: #f7f8fa;
-  font-size: 15px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.modal input:focus, 
-.modal textarea:focus, 
-.modal select:focus {
-  outline: none;
-  border-color: #1877f2;
-  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
-  background: #fff;
-}
-
-.modal textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-/* Xem trước thông tin phòng */
-.room-preview {
-  margin-top: 15px;
-  padding: 15px;
-  background: #f0f7ff;
-  border-left: 4px solid #1877f2;
-  border-radius: 4px 8px 8px 4px;
-}
-
-.room-preview h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  color: #1877f2;
-  text-transform: uppercase;
-}
-
-.room-preview p {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #444;
-}
-
-/* Upload & Preview ảnh */
-.preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.preview-item {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.preview-item img {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 1px solid #ddd;
-}
-
-.remove {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #ff3b30;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* Nút bấm điều hướng */
-.modal-actions {
-  position: sticky;
-  bottom: -24px;
-  background: white;
-  padding: 15px 0 0 0;
-  margin-top: 20px;
-  display: flex;
-  gap: 12px;
-  border-top: 1px solid #eee;
-}
-
-.btn {
-  flex: 1;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.cancel {
-  background: #e4e6eb;
-  color: #4b4b4b;
-}
-
-.submit {
-  background: #1877f2;
-  color: white;
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
-
-/* Scrollbar cho Modal */
-.modal::-webkit-scrollbar {
-  width: 6px;
-}
-.modal::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 10px;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+.bg-gray-800\/50 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }
 </style>

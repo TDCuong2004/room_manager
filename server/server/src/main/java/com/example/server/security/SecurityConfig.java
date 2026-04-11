@@ -1,6 +1,7 @@
 package com.example.server.security;
 
 import com.example.server.security.jwt.AuthTokenFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,7 @@ public class SecurityConfig {
                 .cors(cors -> {}) // 👈 THÊM DÒNG NÀY
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll() // 🔥 THÊM DÒNG NÀY
                         .requestMatchers("/admin/**").hasRole("ADMIN")

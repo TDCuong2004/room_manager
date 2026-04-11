@@ -21,6 +21,6 @@ public class MeterReading {
     private ServiceEntity  service;
 
     private String month;
-    private Integer oldValue;
-    private Integer newValue;
+    private Double oldValue;
+    private Double newValue;
 }

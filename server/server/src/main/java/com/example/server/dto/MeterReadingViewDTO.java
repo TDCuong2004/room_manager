@@ -11,6 +11,6 @@ public class MeterReadingViewDTO {
     private Long serviceId;
     private String serviceName;
 
-    private Integer oldValue;
-    private Integer newValue;
+    private Double oldValue;
+    private Double newValue;
 }

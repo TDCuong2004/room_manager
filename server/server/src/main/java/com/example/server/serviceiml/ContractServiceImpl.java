@@ -19,6 +19,8 @@ import java.util.List;
 @Service
 public class ContractServiceImpl implements ContractService {
 
+    private final MeterReadingRepository meterReadingRepository;
+    private final BuildingServiceRepository buildingServiceRepository;
     private final ContractRepository contractRepository;
     private final ContractCustomerRepository contractCustomerRepository;
     private final RoomRepository roomRepository;
@@ -28,12 +30,16 @@ public class ContractServiceImpl implements ContractService {
             ContractRepository contractRepository,
             ContractCustomerRepository contractCustomerRepository,
             RoomRepository roomRepository,
-            CustomerRepository customerRepository
+            CustomerRepository customerRepository,
+            MeterReadingRepository meterReadingRepository,
+            BuildingServiceRepository buildingServiceRepository
     ) {
         this.contractRepository = contractRepository;
         this.contractCustomerRepository = contractCustomerRepository;
         this.roomRepository = roomRepository;
         this.customerRepository = customerRepository;
+        this.meterReadingRepository = meterReadingRepository;
+        this.buildingServiceRepository = buildingServiceRepository;
     }
 
     @Override
@@ -99,6 +105,45 @@ public class ContractServiceImpl implements ContractService {
 
         contractRepository.save(contract);
 
+        // ================= INIT METER =================
+        List<BuildingService> services =
+                buildingServiceRepository.findByBuildingId(room.getBuilding().getId());
+
+        String month = request.getStartDate().toString().substring(0, 7);
+
+        for (BuildingService bs : services) {
+
+            ServiceEntity service = bs.getService();
+
+            // ✅ chỉ xử lý service cần nhập số
+            if (!service.getCalculationType().name().equals("BY_METER")) continue;
+
+            // ✅ check đã tồn tại chưa
+            boolean exists = meterReadingRepository
+                    .findByRoomAndServiceAndMonth(room, service, month)
+                    .isPresent();
+
+            if (exists) continue;
+
+            MeterReading m = new MeterReading();
+            m.setRoom(room);
+            m.setService(service);
+            m.setMonth(month);
+
+            // ================= LẤY CHỈ SỐ TỪ FE =================
+            Double oldValue = null;
+
+            if (request.getMeterOldValues() != null) {
+                oldValue = request.getMeterOldValues().get(service.getId());
+            }
+
+            // fallback nếu không nhập
+            m.setOldValue(oldValue != null ? oldValue : 0);
+            m.setNewValue(m.getOldValue());
+
+            meterReadingRepository.save(m);
+        }
+
         // ================= CUSTOMERS =================
         for (CustomerContractDTO c : request.getCustomers()) {
 
@@ -151,7 +196,6 @@ public class ContractServiceImpl implements ContractService {
 
         LocalDate newStartDate = old.getEndDate().plusDays(1);
 
-        // ================= CHECK OVERLAP =================
         boolean overlap = contractRepository.findAll().stream()
                 .anyMatch(c ->
                         c.getRoom().getId().equals(old.getRoom().getId()) &&
@@ -163,7 +207,6 @@ public class ContractServiceImpl implements ContractService {
             throw new RuntimeException("Hợp đồng mới bị trùng thời gian");
         }
 
-        // ================= CREATE NEW CONTRACT =================
         Contract newContract = new Contract();
         newContract.setRoom(old.getRoom());
         newContract.setStartDate(newStartDate);
@@ -190,7 +233,7 @@ public class ContractServiceImpl implements ContractService {
         contractRepository.save(newContract);
         old.setRenewed(true);
         contractRepository.save(old);
-        // ================= COPY CUSTOMERS =================
+
         List<ContractCustomer> oldCustomers =
                 contractCustomerRepository.findByContract_Id(old.getId());
 

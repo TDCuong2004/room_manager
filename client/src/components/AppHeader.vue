@@ -84,7 +84,7 @@
     </div>
 
     <!-- SEARCH -->
-    <div class="search-wrapper">
+    <!-- <div class="search-wrapper">
       <div class="search-box">
 
         <div class="search-item">
@@ -111,7 +111,7 @@
         </button>
 
       </div>
-    </div>
+    </div> -->
 
   </header>
 <!-- 🔥 MODAL GIA HẠN -->

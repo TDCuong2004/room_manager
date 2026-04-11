@@ -26,6 +26,7 @@ AND c.endDate BETWEEN :today AND :targetDate
             @Param("targetDate") LocalDate targetDate
     );
     List<Contract> findByStatusAndStartDate(ContractStatus status, LocalDate startDate);
-
+    Optional<Contract> findTopByRoom_IdOrderByEndDateDesc(Long roomId);
     List<Contract> findByStatusAndEndDateBefore(ContractStatus status, LocalDate date);
+    boolean existsByRoomIdAndStatus(Long roomId, ContractStatus status);
 }
