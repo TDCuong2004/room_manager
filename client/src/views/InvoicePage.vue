@@ -53,14 +53,20 @@
               <td class="p-4 text-slate-500 text-sm italic">{{ inv.month }}</td>
               <td class="p-4 font-black text-rose-600">{{ formatMoney(inv.totalAmount) }} đ</td>
               <td class="p-4">
-                <span 
+                <select
+                  v-model="inv.status"
+                  @change="handleStatusChange(inv)"
+                  :disabled="inv.status === 'PAID'"
                   :class="[
-                    'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider',
-                    inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'
+                    'px-3 py-1 rounded-full text-xs font-bold outline-none cursor-pointer',
+                    inv.status === 'PAID'
+                      ? 'bg-emerald-100 text-emerald-600 cursor-not-allowed'
+                      : 'bg-orange-100 text-orange-600'
                   ]"
                 >
-                  {{ inv.status === 'PAID' ? 'Đã thanh toán' : 'Chờ thu' }}
-                </span>
+                  <option value="UNPAID">Chờ thu</option>
+                  <option value="PAID">Đã thanh toán</option>
+                </select>
               </td>
 
               <td class="p-4">
@@ -71,13 +77,13 @@
                   <button @click="generateQR(inv)" class="p-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors title='Tạo mã QR'">
                     QR
                   </button>
-                  <button 
+                  <!-- <button 
                     v-if="inv.status === 'UNPAID'"
                     @click="markPaid(inv)"
                     class="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-all shadow-md shadow-emerald-100"
                   >
                     Thu tiền
-                  </button>
+                  </button> -->
                 </div>
               </td>
             </tr>
@@ -151,6 +157,55 @@
         </button>
       </div>
     </div>
+    <!-- MODAL PAYMENT -->
+    <div v-if="showPaymentModal" class="fixed inset-0 z-[9999] flex items-center justify-center">
+  
+    <!-- overlay -->
+    <div 
+      class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all"
+      @click="showPaymentModal=false">
+    </div>
+
+    <!-- modal -->
+    <div class="relative z-10 w-[360px] bg-white rounded-3xl shadow-2xl p-6 animate-in">
+
+      <!-- title -->
+      <h3 class="text-xl font-black text-slate-800 mb-5 text-center">
+        💳 Chọn phương thức thanh toán
+      </h3>
+
+      <!-- select -->
+      <div class="mb-5">
+        <select 
+          v-model="selectedPaymentMethod" 
+          class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition-all font-medium"
+        >
+          <option value="">-- Chọn phương thức --</option>
+          <option value="CASH">💵 Tiền mặt</option>
+          <option value="BANK_TRANSFER">🏦 Chuyển khoản</option>
+        </select>
+      </div>
+
+      <!-- buttons -->
+      <div class="flex gap-3">
+        <button 
+          @click="showPaymentModal=false" 
+          class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all"
+        >
+          Hủy
+        </button>
+
+        <button 
+          @click="confirmPayment" 
+          class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-md shadow-emerald-200 transition-all active:scale-95"
+        >
+          Xác nhận
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   </div>
 </template>
 
@@ -171,14 +226,19 @@ export default {
   data() {
     return {
       invoices: [],
-      selectedMonth: "", // Sẽ được set mặc định trong mounted
+      selectedMonth: "",
       selectedBuilding: "",
       buildings: [],
+
       showDetail: false,
-      selectedInvoice: {},
+      selectedInvoice: null, // ✅ dùng chung luôn
+
       details: [],
       showQR: false,
-      qrUrl: ""
+      qrUrl: "",
+
+      showPaymentModal: false,
+      selectedPaymentMethod: ""
     }
   },
 
@@ -238,7 +298,43 @@ export default {
         alert("Lỗi khi tính tiền")
       }
     },
+    handleStatusChange(inv) {
+      // nếu đã PAID thì chặn
+      if (inv.status === "PAID" && inv.paidAt) return
 
+      // nếu user chọn PAID
+      if (inv.status === "PAID") {
+        this.selectedInvoice = inv
+        this.selectedPaymentMethod = ""
+        this.showPaymentModal = true
+
+        // rollback về UNPAID để chờ confirm
+        inv.status = "UNPAID"
+      }
+    },
+
+    async confirmPayment() {
+      if (!this.selectedPaymentMethod) {
+        alert("Chọn phương thức thanh toán")
+        return
+      }
+
+      try {
+        await api.put(`/invoices/${this.selectedInvoice.id}/status`, {
+          status: "PAID",
+          paymentMethod: this.selectedPaymentMethod
+        })
+
+        this.selectedInvoice.status = "PAID"
+        this.selectedInvoice.paymentMethod = this.selectedPaymentMethod
+
+        this.showPaymentModal = false
+
+      } catch (err) {
+        console.error(err)
+        alert("Lỗi thanh toán")
+      }
+    },
     async viewDetail(inv) {
       this.selectedInvoice = inv
       this.showDetail = true
@@ -295,5 +391,18 @@ export default {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 10px;
+}.animate-in {
+  animation: modalIn 0.25s ease-out;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 </style>

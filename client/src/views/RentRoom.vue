@@ -42,7 +42,34 @@
             </div>
           </div>
         </section>
+        <section 
+          v-if="meterServices.length"
+          class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+        >
+          <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span class="text-blue-500">⚡</span> Chỉ số dịch vụ ban đầu
+          </h3>
 
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div 
+              v-for="s in meterServices" 
+              :key="s.id"
+              class="space-y-1"
+            >
+              <label class="text-xs font-bold text-gray-500 ml-1 italic">
+                {{ s.serviceName }}
+              </label>
+
+              <input
+                type="number"
+                step="0.01"
+                v-model.number="form.meterOldValues[s.id]"
+                placeholder="Nhập chỉ số"
+                class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+          </div>
+        </section>
         <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <span class="text-blue-500">📅</span> Điều khoản hợp đồng
@@ -173,7 +200,8 @@ import api from "@/api"
 
 const route = useRoute()
 const router = useRouter()
-
+const services = ref([])
+const meterServices = ref([])
 const room = ref({})
 const representativeIndex = ref(0)
 const form = ref({
@@ -182,7 +210,9 @@ const form = ref({
   endDate: "",
   deposit: "",
   rentPrice: "",
-  customers: []
+  customers: [],
+  meterOldValues: {},
+  meterList: []
 })
 
 const formatMoney = (v) => new Intl.NumberFormat("vi-VN").format(v || 0)
@@ -207,6 +237,34 @@ const addCustomer = () => {
     cccdFrontImage: "",
     cccdBackImage: ""
   })
+}
+
+const loadServices = async () => {
+  try {
+    const buildingId = room.value.building?.id
+
+    if (!buildingId) {
+      console.error("❌ Không có buildingId", room.value)
+      return
+    }
+
+    const res = await api.get(`/building-services/${buildingId}`)
+
+    services.value = res.data
+
+    // 🔥 lọc service tính theo công tơ
+    meterServices.value = services.value.filter(
+      s => s.calculationType === "BY_METER"
+    )
+
+    // 🔥 init giá trị ban đầu = 0
+    meterServices.value.forEach(s => {
+      form.value.meterOldValues[s.id] = 0
+    })
+
+  } catch (e) {
+    console.error("LOAD SERVICES ERROR:", e)
+  }
 }
 
 const removeCustomer = (index) => {
@@ -255,6 +313,7 @@ const goPreview = () => {
     alert("Vui lòng nhập thời hạn hợp đồng")
     return
   }
+
   if (!form.value.customers.length) {
     alert("Cần thêm ít nhất một người thuê")
     return
@@ -264,6 +323,14 @@ const goPreview = () => {
     c.representative = i === representativeIndex.value
   })
 
+  // 🔥 build meter list
+  form.value.meterList = meterServices.value.map(s => ({
+    serviceId: s.id,
+    oldValue: form.value.meterOldValues[s.id]
+  }))
+
+  console.log("FORM SEND:", form.value)
+
   sessionStorage.setItem("contractData", JSON.stringify({
     room: room.value,
     form: form.value
@@ -272,10 +339,12 @@ const goPreview = () => {
   router.push("/contract-preview")
 }
 
-onMounted(() => {
+onMounted(async () => {
   const roomId = route.params.roomId
   form.value.roomId = roomId
-  fetchRoom(roomId)
+
+  await fetchRoom(roomId)
+  await loadServices() // 🔥 thêm dòng này
 })
 </script>
 

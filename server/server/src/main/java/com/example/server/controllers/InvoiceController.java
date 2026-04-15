@@ -3,9 +3,11 @@ package com.example.server.controllers;
 import com.example.server.dto.InvoiceResponse;
 import com.example.server.services.InvoiceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/invoices")
@@ -31,5 +33,17 @@ public class InvoiceController {
 
         invoiceService.generateInvoices(buildingId, month);
         return "OK";
+    }
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        invoiceService.updateStatus(
+                id,
+                body.get("status"),
+                body.get("paymentMethod")
+        );
+        return ResponseEntity.ok().build();
     }
 }

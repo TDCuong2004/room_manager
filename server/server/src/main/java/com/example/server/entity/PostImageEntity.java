@@ -1,7 +1,10 @@
 package com.example.server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -14,6 +17,11 @@ public class PostImageEntity {
 
     private String imageUrl;
 
+//    @ManyToOne
+//    @JoinColumn(name = "post_id")
+//    private PostEntity post;
+
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "post_id")
     private PostEntity post;

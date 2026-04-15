@@ -1,48 +1,88 @@
 <template>
-  <div class="modal-overlay" @click.self="close">
+  <!-- TOAST -->
+  <div
+    v-if="toast.show"
+    class="fixed top-5 right-5 px-4 py-3 rounded-xl text-white shadow-lg z-[9999] transition-all"
+    :class="toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'"
+  >
+    {{ toast.message }}
+  </div>
 
-    <div class="modal-card">
-      <h2>Thêm Nhà Trọ</h2>
+  <!-- MODAL -->
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @click.self="close">
 
-      <form @submit.prevent="handleSubmit">
-        <div class="form-group">
-          <label>Tên nhà trọ</label>
-          <input v-model="building.buildingName" required />
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 animate-scaleIn">
+
+      <h2 class="text-xl font-bold text-gray-800 mb-6">
+        Thêm Nhà Trọ
+      </h2>
+
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+
+        <!-- TÊN -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase">Tên nhà trọ</label>
+          <input 
+            v-model="building.buildingName"
+            required
+            class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-400 outline-none transition"
+          />
         </div>
 
-        <div class="form-group">
-          <label>Địa chỉ</label>
-          <input v-model="building.address" required />
+        <!-- ĐỊA CHỈ -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase">Địa chỉ</label>
+          <input 
+            v-model="building.address"
+            required
+            class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-400 outline-none transition"
+          />
         </div>
 
-        <div class="form-group">
-          <label>Mô tả</label>
-          <textarea v-model="building.description"></textarea>
+        <!-- MÔ TẢ -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase">Mô tả</label>
+          <textarea 
+            v-model="building.description"
+            class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-400 outline-none transition"
+          />
         </div>
 
-        <div class="button-group">
-          <button type="submit">Thêm</button>
+        <!-- BUTTON -->
+        <div class="flex justify-end gap-3 pt-3">
 
           <button
             type="button"
-            class="cancel-btn"
             @click="close"
+            class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
           >
             Hủy
           </button>
+
+          <button
+            type="submit"
+            :disabled="loading"
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-semibold shadow-md hover:opacity-90 active:scale-95 transition flex items-center gap-2"
+          >
+            <span v-if="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            {{ loading ? "Đang thêm..." : "Thêm" }}
+          </button>
+
         </div>
 
       </form>
-    </div>
 
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue"
-import axios from "axios"
+import api from "@/api"
 
 const emit = defineEmits(["close","reload"])
+
+const loading = ref(false)
 
 const building = ref({
   buildingName: "",
@@ -50,130 +90,69 @@ const building = ref({
   description: ""
 })
 
-const close = () => {
-  emit("close")
+// TOAST STATE
+const toast = ref({
+  show: false,
+  message: "",
+  type: "success"
+})
+
+const showToast = (message, type = "success") => {
+  toast.value = {
+    show: true,
+    message,
+    type
+  }
+
+  setTimeout(() => {
+    toast.value.show = false
+  }, 2500)
 }
+
+const close = () => emit("close")
 
 const handleSubmit = async () => {
   try {
-
     const token = localStorage.getItem("token")
 
     if (!token) {
-      alert("Bạn chưa đăng nhập!")
+      showToast("Bạn chưa đăng nhập ⚠️", "error")
       return
     }
 
-    await axios.post(
-      "http://localhost:3000/api/buildings",
-      building.value,
-      {
-        headers:{
-          Authorization:`Bearer ${token}`
-        }
-      }
-    )
+    loading.value = true
 
-    alert("Thêm thành công")
+    await api.post("/buildings", building.value)
 
-    emit("reload") // load lại list
-    emit("close")  // đóng modal
+    showToast("Thêm nhà trọ thành công 🎉", "success")
 
-  } catch(err) {
+    setTimeout(() => {
+      emit("reload")
+      emit("close")
+    }, 800)
+
+  } catch (err) {
     console.error(err)
-    alert("Lỗi khi thêm nhà trọ")
+    showToast("Lỗi khi thêm nhà trọ ❌", "error")
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <style scoped>
-
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.55);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-  backdrop-filter:blur(3px);
-}
-
-.modal-card{
-  width:480px;
-  background:white;
-  padding:35px;
-  border-radius:20px;
-  box-shadow:0 25px 60px rgba(0,0,0,0.2);
-  animation:popup .25s ease;
-}
-
-@keyframes popup{
-  from{
-    transform:scale(.9);
-    opacity:0;
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
   }
-  to{
-    transform:scale(1);
-    opacity:1;
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
-h2{
-  margin-bottom:25px;
-  font-size:22px;
-  color:#1f2937;
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease;
 }
-
-.form-group{
-  margin-bottom:18px;
-}
-
-input,textarea{
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #e5e7eb;
-  font-size:14px;
-  background:#f9fafb;
-}
-
-input:focus,textarea:focus{
-  outline:none;
-  border-color:#ff512f;
-}
-
-textarea{
-  min-height:90px;
-  resize:none;
-}
-
-.button-group{
-  margin-top:20px;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-}
-
-button{
-  padding:10px 20px;
-  border-radius:25px;
-  border:none;
-  cursor:pointer;
-  font-size:14px;
-}
-
-button[type="submit"]{
-  background:linear-gradient(135deg,#ff512f,#f09819);
-  color:white;
-}
-
-.cancel-btn{
-  background:#e5e7eb;
-}
-
-.cancel-btn:hover{
-  background:#d1d5db;
-}
-
 </style>

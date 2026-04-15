@@ -36,6 +36,12 @@
         >
           <span class="text-lg">💰</span> Invoices
         </button>
+        <button 
+          @click="goPosts" 
+          :class="[navItemClass, currentView === 'posts' ? activeClass : inactiveClass]"
+        >
+          <span class="text-lg">📝</span> Posts
+        </button>
       </nav>
 
       <div class="p-4 border-t border-slate-700 bg-slate-900/50">
@@ -66,7 +72,7 @@
         <Services v-if="currentView === 'services'" />
         
         <InvoicePage v-if="currentView === 'invoices'" />
-        
+        <PostManager v-if="currentView === 'posts'" />
         <BuildingServices
           v-if="currentView === 'buildingServices'"
           :buildingId="buildingId"
@@ -87,7 +93,7 @@ import BuildingServices from "@/views/BuildingServices.vue"
 import RoomManager from "@/views/RoomManager.vue"
 import InvoicePage from "@/views/InvoicePage.vue"
 import UtilityReadings from "@/views/UtilityReadings.vue"
-
+import PostManager from "@/views/PostManager.vue"
 const currentView = ref("buildings")
 const buildingId = ref(null)
 
@@ -117,6 +123,9 @@ const goServices = () => {
 }
 const goInvoices = () => {
   currentView.value = "invoices"
+}
+const goPosts = () => {
+  currentView.value = "posts"
 }
 </script>
 

@@ -60,18 +60,36 @@
 <script setup>
 import { ref } from 'vue'
 
+import api from '@/api' 
+
+const emit = defineEmits(['updateResults'])
+
 const search = ref({
   location: '',
   maxPrice: null,
   area: null
 })
 
-const handleSearch = () => {
-  console.log('Đang tìm kiếm:', search.value)
-  // Logic emit hoặc gửi lên store/router ở đây
+const handleSearch = async () => {
+  try {
+    const res = await api.post('/posts/search', search.value)
+
+    emit('updateResults', res.data)
+
+  } catch (err) {
+    console.error('Lỗi search:', err)
+  }
 }
 
-const resetSearch = () => {
+
+const resetSearch = async () => {
   search.value = { location: '', maxPrice: null, area: null }
+
+  try {
+    const res = await api.get('/posts')
+    emit('updateResults', res.data)
+  } catch (err) {
+    console.error(err)
+  }
 }
 </script>

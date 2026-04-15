@@ -134,10 +134,15 @@ public class RoomServiceImpl implements RoomService {
     }
 
     // ================= UPDATE WITH IMAGES =================
-    @Override
-    public Rooms updateWithImages(Long id, Rooms roomRequest, List<MultipartFile> images) {
+    public Rooms updateWithImages(
+            Long id,
+            Rooms roomRequest,
+            List<MultipartFile> images,
+            List<String> keepImages   // 🔥 thêm cái này
+    ) {
 
         Rooms room = getById(id);
+
         room.setRoomName(roomRequest.getRoomName());
         room.setPrice(roomRequest.getPrice());
         room.setArea(roomRequest.getArea());
@@ -147,9 +152,19 @@ public class RoomServiceImpl implements RoomService {
 
         Rooms savedRoom = roomRepository.save(room);
 
-        if (images != null) {
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
 
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        // ================= XÓA ẢNH CŨ =================
+        List<RoomImage> currentImages = roomImageRepository.findByRoomId(id);
+
+        for (RoomImage img : currentImages) {
+            if (keepImages == null || !keepImages.contains(img.getImageUrl())) {
+                roomImageRepository.delete(img);
+            }
+        }
+
+        // ================= THÊM ẢNH MỚI =================
+        if (images != null) {
 
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
@@ -171,7 +186,6 @@ public class RoomServiceImpl implements RoomService {
                     roomImageRepository.save(img);
 
                 } catch (Exception e) {
-                    System.out.println("UPLOAD ERROR:");
                     e.printStackTrace();
                     throw new RuntimeException(e);
                 }
@@ -179,5 +193,9 @@ public class RoomServiceImpl implements RoomService {
         }
 
         return savedRoom;
+    }
+    @Override
+    public void deleteImage(Long imageId) {
+        roomImageRepository.deleteById(imageId);
     }
 }

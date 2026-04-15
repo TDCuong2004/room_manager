@@ -1,354 +1,95 @@
 <template>
-  <div class="utility-page">
+  <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm sticky top-20">
+    <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span class="text-xl">🔍</span> Bộ lọc tìm kiếm
+    </h3>
 
-    <!-- HEADER -->
-    <div class="page-header">
-      <div>
-        <h2>⚡ Utility Readings</h2>
-        <p>Nhập và quản lý chỉ số dịch vụ theo phòng</p>
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black text-gray-500 uppercase tracking-wider ml-1">Địa điểm</label>
+        <input 
+          v-model="search.location" 
+          placeholder="Nhập khu vực..." 
+          class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+        />
       </div>
 
-      <div class="actions">
-        <button class="btn secondary">Export</button>
-        <button class="btn primary" @click="saveAll">Save All</button>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black text-gray-500 uppercase tracking-wider ml-1">Giá tối đa</label>
+        <div class="relative">
+          <input 
+            v-model="search.maxPrice" 
+            type="number" 
+            placeholder="VNĐ" 
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm pr-12"
+          />
+          <span class="absolute right-4 top-3.5 text-gray-400 text-xs font-bold">VNĐ</span>
+        </div>
       </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-black text-gray-500 uppercase tracking-wider ml-1">Diện tích tối thiểu</label>
+        <div class="relative">
+          <input 
+            v-model="search.area" 
+            type="number" 
+            placeholder="m²" 
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm pr-10"
+          />
+          <span class="absolute right-4 top-3.5 text-gray-400 text-xs font-bold">m²</span>
+        </div>
+      </div>
+
+      <button 
+        @click="handleSearch"
+        class="mt-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+      >
+        <span>Tìm kiếm ngay</span>
+      </button>
+      
+      <button 
+        @click="resetSearch"
+        class="w-full py-2 text-gray-400 hover:text-gray-600 text-xs font-semibold transition-colors"
+      >
+        Xóa bộ lọc
+      </button>
     </div>
-
-    <!-- FILTER -->
-    <div class="filters">
-
-      <!-- 🔥 SERVICES -->
-      <div class="tabs">
-        <button
-          v-for="s in services"
-          :key="s.id"
-          :class="['tab', selectedServiceId === s.id ? 'active' : '']"
-          @click="selectService(s)"
-        >
-          {{ s.serviceName }}
-        </button>
-      </div>
-
-      <!-- 🔥 SELECTORS -->
-      <div class="selectors">
-
-        <!-- CHỌN TÒA -->
-        <select v-model="selectedBuildingId" @change="onBuildingChange">
-          <option value="">Chọn tòa</option>
-          <option v-for="b in buildings" :key="b.id" :value="b.id">
-            {{ b.buildingName }}
-          </option>
-        </select>
-
-        <!-- CHỌN THÁNG -->
-        <input type="month" v-model="selectedMonth" @change="loadData"/>
-
-      </div>
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Phòng</th>
-            <th>Người thuê</th>
-            <th>Chỉ số cũ</th>
-            <th>Chỉ số mới</th>
-            <th>Tiêu thụ</th>
-            <th>Trạng thái</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr v-for="row in readings" :key="row.roomId">
-            <td>{{ row.roomName }}</td>
-            <td>{{ row.customerName }}</td>
-
-            <td>{{ format(row.oldValue) }}</td>
-
-            <td>
-              <input
-                v-model.number="row.newValue"
-                type="number"
-                class="input"
-                placeholder="Nhập"
-              />
-            </td>
-
-            <td class="usage">
-              {{ calcUsage(row) }}
-            </td>
-
-            <td>
-              <span :class="['status', getStatus(row)]">
-                {{ getStatus(row) }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
   </div>
 </template>
 
-<script>
-import api from "@/api"
+<script setup>
+import { ref } from 'vue'
 
-export default {
-  data() {
-    return {
-      selectedBuildingId: "",
-      selectedServiceId: "",
-      selectedMonth: "",
+import api from '@/api' 
 
-      buildings: [],
-      services: [],
-      readings: []
-    }
-  },
+const emit = defineEmits(['updateResults'])
 
-  mounted() {
-    const now = new Date()
-    this.selectedMonth = now.toISOString().slice(0, 7)
+const search = ref({
+  location: '',
+  maxPrice: null,
+  area: null
+})
 
-    this.loadBuildings()
-  },
+const handleSearch = async () => {
+  try {
+    const res = await api.post('/posts/search', search.value)
 
-  methods: {
+    emit('updateResults', res.data)
 
-    // LOAD BUILDINGS
-    async loadBuildings() {
-      try {
-        const res = await api.get("/buildings")
-        this.buildings = res.data
-      } catch (e) {
-        console.error(e)
-      }
-    },
+  } catch (err) {
+    console.error('Lỗi search:', err)
+  }
+}
 
-    // CHANGE BUILDING
-    async onBuildingChange() {
-      this.selectedServiceId = ""
-      this.services = []
-      this.readings = []
 
-      if (!this.selectedBuildingId) return
+const resetSearch = async () => {
+  search.value = { location: '', maxPrice: null, area: null }
 
-      try {
-        const res = await api.get(`/building-services/${this.selectedBuildingId}`)
-
-        this.services = res.data
-
-        // ✅ FIX QUAN TRỌNG
-        if (this.services.length > 0) {
-          this.selectedServiceId = this.services[0].serviceId
-          console.log("Auto serviceId:", this.selectedServiceId)
-          this.loadData()
-        }
-
-      } catch (e) {
-        console.error(e)
-      }
-    },
-
-    // SELECT SERVICE
-    selectService(s) {
-      this.selectedServiceId = s.serviceId   // ✅ FIX
-      console.log("Selected serviceId:", this.selectedServiceId)
-      this.loadData()
-    },
-
-    // LOAD DATA
-    async loadData() {
-      if (!this.selectedServiceId || !this.selectedMonth) return
-
-      try {
-        console.log("CALL API:", {
-          month: this.selectedMonth,
-          serviceId: this.selectedServiceId,
-          buildingId: this.selectedBuildingId
-        })
-
-        const res = await api.get("/meter-readings", {
-          params: {
-            month: this.selectedMonth,
-            serviceId: this.selectedServiceId,
-            buildingId: this.selectedBuildingId 
-          }
-        })
-
-        this.readings = res.data
-
-      } catch (e) {
-        console.error("LOAD DATA ERROR:", e)
-      }
-    },
-
-    // FORMAT
-    format(val) {
-      return val?.toLocaleString()
-    },
-
-    // USAGE
-    calcUsage(row) {
-      if (row.newValue == null || row.oldValue == null) return "--"
-      return (row.newValue - row.oldValue).toFixed(2)
-    },
-
-    // STATUS
-    getStatus(row) {
-      if (!row.newValue && row.newValue !== 0) return "missing"
-      if (row.newValue < row.oldValue) return "error"
-      return "complete"
-    },
-
-    // SAVE ALL
-    async saveAll() {
-      try {
-        const payload = this.readings.map(r => ({
-          roomId: r.roomId,
-          serviceId: this.selectedServiceId, // ✅ đảm bảo đúng
-          month: this.selectedMonth,
-          newValue: r.newValue
-        }))
-
-        await api.post("/meter-readings/bulk", payload)
-
-        alert("Lưu thành công!")
-
-      } catch (e) {
-        console.error(e)
-        alert("Lỗi khi lưu")
-      }
-    }
+  try {
+    const res = await api.get('/posts')
+    emit('updateResults', res.data)
+  } catch (err) {
+    console.error(err)
   }
 }
 </script>
-
-<style scoped>
-.utility-page {
-  padding: 20px;
-}
-
-/* HEADER */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header p {
-  color: #777;
-  font-size: 14px;
-}
-
-/* BUTTON */
-.btn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.primary {
-  background: #ff4d6d;
-  color: white;
-}
-
-.secondary {
-  background: #eee;
-}
-
-/* FILTER */
-.filters {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-}
-
-.tab {
-  padding: 6px 12px;
-  border-radius: 20px;
-  background: #f1f1f1;
-  cursor: pointer;
-}
-
-.tab.active {
-  background: #ff4d6d;
-  color: white;
-}
-
-.selectors select,
-.selectors input {
-  margin-left: 10px;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* TABLE */
-.table-wrapper {
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th {
-  text-align: left;
-  padding: 10px;
-  background: #f9f9f9;
-}
-
-td {
-  padding: 10px;
-  border-top: 1px solid #eee;
-}
-
-/* INPUT */
-.input {
-  width: 100px;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* STATUS */
-.status {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-
-.complete {
-  background: #d4edda;
-  color: #28a745;
-}
-
-.missing {
-  background: #ffe5e5;
-  color: #dc3545;
-}
-
-.error {
-  background: #fff3cd;
-  color: #ff9800;
-}
-
-.usage {
-  font-weight: bold;
-}
-</style>

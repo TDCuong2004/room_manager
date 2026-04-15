@@ -2,8 +2,7 @@ package com.example.server.serviceiml;
 
 import com.example.server.dto.InvoiceResponse;
 import com.example.server.entity.*;
-import com.example.server.enums.ContractStatus;
-import com.example.server.enums.CalculationType;
+import com.example.server.enums.*;
 import com.example.server.repository.*;
 import com.example.server.services.InvoiceService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +25,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final MeterReadingRepository meterReadingRepository;
     private final InvoiceRepository invoiceRepository;
     private final InvoiceDetailRepository invoiceDetailRepository;
-
     @Override
     @Transactional
     public void generateInvoices(Long buildingId, String month) {
@@ -61,6 +60,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             invoice.setRoom(room);
             invoice.setContract(contract);
             invoice.setMonth(month);
+            invoice.setStatus(InvoiceStatus.UNPAID);
             invoice.setTotalAmount(BigDecimal.ZERO);
 
             invoiceRepository.save(invoice);
@@ -129,4 +129,31 @@ public class InvoiceServiceImpl implements InvoiceService {
                 ))
                 .toList();
     }
+    @Override
+    @Transactional
+    public void updateStatus(Long id, String status, String paymentMethod) {
+
+        InvoiceEntity invoice = invoiceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        if (invoice.getStatus() == InvoiceStatus.PAID) {
+            throw new RuntimeException("Hóa đơn đã thanh toán, không thể thay đổi!");
+        }
+
+        if (!"PAID".equals(status)) {
+            throw new RuntimeException("Chỉ được chuyển sang PAID");
+        }
+
+        if (paymentMethod == null) {
+            throw new RuntimeException("Thiếu phương thức thanh toán");
+        }
+
+        // ✅ Update
+        invoice.setStatus(InvoiceStatus.PAID);
+        invoice.setPaidAt(LocalDateTime.now());
+
+        // ⚠️ convert String -> Enum
+        invoice.setPaymentMethod(PaymentMethod.valueOf(paymentMethod));
+    }
+
 }

@@ -1,10 +1,13 @@
 package com.example.server.entity;
 
 import com.example.server.enums.PostStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "posts")
@@ -35,4 +38,7 @@ public class PostEntity {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostImageEntity> images;
 }

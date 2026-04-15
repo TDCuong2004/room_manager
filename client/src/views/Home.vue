@@ -4,14 +4,17 @@
       
       <div 
         class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
-        @click="openModal"
+        @click="handleOpenModal"
       >
+        <!-- CHỈ HIỆN AVATAR KHI LOGIN -->
         <img
+          v-if="isLoggedIn"
           class="w-10 h-10 rounded-full object-cover border border-gray-100"
           :src="currentUser?.avatar || 'https://i.pravatar.cc/40'"
         />
+
         <div class="flex-1 bg-gray-100 hover:bg-gray-200 py-2.5 px-5 rounded-full text-gray-500 text-[15px] transition-colors font-medium">
-          Bạn đang nghĩ gì thế?
+          {{ isLoggedIn ? "Bạn đang nghĩ gì thế?" : "Đăng nhập để đăng bài..." }}
         </div>
       </div>
 
@@ -136,7 +139,7 @@
 <script setup>
 import { ref, onMounted, watch, computed, onBeforeUnmount } from "vue"
 import api from "@/api"
-
+import Sidebar from '@/components/AppSidebar.vue'
 // --- DATA ---
 const posts = ref([])
 const rooms = ref([])
@@ -148,7 +151,7 @@ const currentUser = ref(JSON.parse(localStorage.getItem("user") || "{}"))
 const form = ref({ title: "", content: "", roomId: "" })
 const images = ref([])
 const preview = ref([])
-
+const isLoggedIn = ref(!!localStorage.getItem("token"))
 const lightbox = ref({ show: false, images: [], index: 0 })
 
 // --- UTILS ---
@@ -195,27 +198,71 @@ const handleKeydown = (e) => {
 }
 
 // --- API LOGIC ---
-const fetchPosts = async () => { const res = await api.get("/posts"); posts.value = res.data }
+const fetchPosts = async () => { 
+  const res = await api.get("/posts"); 
+  
+  posts.value = [...res.data].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  )
+}
 const fetchRooms = async () => { const res = await api.get("/rooms"); rooms.value = res.data }
 const fetchBuildings = async () => { const res = await api.get("/buildings"); buildings.value = res.data }
 
 const filteredRooms = computed(() => rooms.value.filter(r => r.building?.id == selectedBuilding.value && r.status === "EMPTY"))
 
-watch(() => form.value.roomId, (id) => {
+watch(() => form.value.roomId, async (id) => {
   selectedRoom.value = rooms.value.find(r => r.id == id)
-  if (selectedRoom.value) preview.value = [...(selectedRoom.value.images || [])]
+
+  if (selectedRoom.value) {
+
+    const urls = (selectedRoom.value.images || []).map(img => {
+      if (typeof img === "string") return img
+      if (img.imageUrl) return "http://localhost:3000" + img.imageUrl
+      return ""
+    })
+
+    preview.value = urls
+
+    // 🔥 convert sang file luôn
+    images.value = []
+
+    for (let url of urls) {
+      if (!url) continue
+      try {
+        const file = await convertUrlToFile(url)
+        images.value.push(file)
+      } catch (e) {
+        console.error("Convert lỗi:", url)
+      }
+    }
+  }
 })
 
 const openModal = () => showModal.value = true
 const closeModal = () => { showModal.value = false; selectedBuilding.value = ""; form.value = { title: "", content: "", roomId: "" }; preview.value = []; images.value = [] }
 
-const handleImages = (e) => {
-  images.value = e.target.files; preview.value = []
-  for (let f of images.value) {
-    const reader = new FileReader(); reader.onload = (ev) => preview.value.push(ev.target.result); reader.readAsDataURL(f)
+const handleImages = async (e) => {
+  const files = Array.from(e.target.files)
+
+  for (let file of files) {
+    images.value.push(file)
+
+    const base64 = await new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (ev) => resolve(ev.target.result)
+      reader.readAsDataURL(file)
+    })
+
+    preview.value.push(base64)
   }
+
+  e.target.value = ""
 }
-const removeImage = (index) => preview.value.splice(index, 1)
+
+const removeImage = (index) => {
+  preview.value.splice(index, 1)
+  images.value.splice(index, 1)
+}
 
 const selectedBuildingInfo = computed(() => {
   if (!selectedRoom.value) return null
@@ -224,13 +271,52 @@ const selectedBuildingInfo = computed(() => {
 
 const createPost = async () => {
   const formData = new FormData()
-  formData.append("title", form.value.title); formData.append("content", form.value.content); formData.append("roomId", form.value.roomId)
-  for (let f of images.value) formData.append("images", f)
+
+  formData.append("title", form.value.title)
+  formData.append("content", form.value.content)
+  formData.append("roomId", form.value.roomId)
+
+  // ✅ tất cả ảnh (cũ + mới) đều là file
+  images.value.forEach(file => {
+    formData.append("images", file)
+  })
+
   await api.post("/posts", formData)
-  closeModal(); fetchPosts()
+
+  closeModal()
+  fetchPosts()
 }
 
-onMounted(() => { fetchPosts(); fetchRooms(); fetchBuildings() })
+
+const handleOpenModal = () => {
+  if (!isLoggedIn.value) {
+    router.push("/login")
+    return
+  }
+  openModal()
+}
+
+
+
+const convertUrlToFile = async (url) => {
+  const res = await fetch(url)
+  const blob = await res.blob()
+
+  const filename = url.split("/").pop()
+
+  return new File([blob], filename, { type: blob.type })
+}
+
+onMounted(() => {
+  fetchPosts()
+  fetchRooms()
+  fetchBuildings()
+
+  window.addEventListener("userUpdated", () => {
+    isLoggedIn.value = !!localStorage.getItem("token")
+    currentUser.value = JSON.parse(localStorage.getItem("user") || "{}")
+  })
+})
 onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); document.body.style.overflow = '' })
 </script>
 

@@ -17,9 +17,14 @@ public interface RoomService {
     List<Rooms> getByBuilding(Long buildingId);
 
     Rooms update(Long id, Rooms room);
-
+    void deleteImage(Long imageId);
     void delete(Long id);
     List<RoomServiceDTO> getServicesByRoom(Long roomId);
     Rooms createWithImages(Rooms room, List<MultipartFile> images);
-    Rooms updateWithImages(Long id, Rooms room, List<MultipartFile> images);
+    Rooms updateWithImages(
+            Long id,
+            Rooms room,
+            List<MultipartFile> images,
+            List<String> keepImages
+    );
 }

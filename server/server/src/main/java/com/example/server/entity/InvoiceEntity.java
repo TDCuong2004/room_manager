@@ -1,6 +1,7 @@
 package com.example.server.entity;
 
 import com.example.server.enums.InvoiceStatus;
+import com.example.server.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,8 +24,6 @@ public class InvoiceEntity {
     @Enumerated(EnumType.STRING)
     private InvoiceStatus status;
 
-    private String paymentMethod;
-
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
 
@@ -35,4 +34,7 @@ public class InvoiceEntity {
     @ManyToOne
     @JoinColumn(name = "contract_id")
     private Contract contract;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 }

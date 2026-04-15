@@ -13,4 +13,5 @@ public class MeterReadingViewDTO {
 
     private Double oldValue;
     private Double newValue;
+    private boolean paid;
 }

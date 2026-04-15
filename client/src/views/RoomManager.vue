@@ -145,12 +145,17 @@ export default {
     },
     goBack() { this.$emit("back") },
     openAdd() {
-      this.selectedRoom = null
-      this.showModal = true
-    },
-    openEdit(room) {
-      this.selectedRoom = room
-      this.showModal = true
+          this.selectedRoom = null
+          this.showModal = true
+        },
+        async openEdit(room) {
+      try {
+        const res = await api.get(`/rooms/${room.id}`) 
+        this.selectedRoom = res.data
+        this.showModal = true
+      } catch (err) {
+        console.error(err)
+      }
     },
     handleSaved() {
       this.showModal = false

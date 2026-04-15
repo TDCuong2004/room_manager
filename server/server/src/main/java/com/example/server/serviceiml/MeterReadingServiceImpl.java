@@ -4,11 +4,9 @@ import com.example.server.dto.MeterReadingViewDTO;
 import com.example.server.entity.MeterReading;
 import com.example.server.entity.Rooms;
 import com.example.server.entity.ServiceEntity;
+import com.example.server.enums.InvoiceStatus;
 import com.example.server.enums.RoomStatus;
-import com.example.server.repository.ContractCustomerRepository;
-import com.example.server.repository.MeterReadingRepository;
-import com.example.server.repository.RoomRepository;
-import com.example.server.repository.ServiceRepository;
+import com.example.server.repository.*;
 import com.example.server.services.MeterReadingService;
 import org.springframework.stereotype.Service;
 import com.example.server.dto.MeterDTO;
@@ -21,15 +19,19 @@ public class MeterReadingServiceImpl implements MeterReadingService {
     private final RoomRepository roomRepository;
     private final ServiceRepository serviceRepository;
     private final ContractCustomerRepository contractCustomerRepository;
-
-    public MeterReadingServiceImpl(MeterReadingRepository repo,
-                                   RoomRepository roomRepository,
-                                   ServiceRepository serviceRepository,
-                                   ContractCustomerRepository contractCustomerRepository) {
+    private final InvoiceRepository invoiceRepository;
+    public MeterReadingServiceImpl(
+            MeterReadingRepository repo,
+            RoomRepository roomRepository,
+            ServiceRepository serviceRepository,
+            ContractCustomerRepository contractCustomerRepository,
+            InvoiceRepository invoiceRepository // ✅ thêm vào đây
+    ) {
         this.repo = repo;
         this.roomRepository = roomRepository;
         this.serviceRepository = serviceRepository;
         this.contractCustomerRepository = contractCustomerRepository;
+        this.invoiceRepository = invoiceRepository; // ✅ gán
     }
 
     // ================= SAVE =================
@@ -41,9 +43,20 @@ public class MeterReadingServiceImpl implements MeterReadingService {
             Rooms room = roomRepository.findById(dto.roomId).orElseThrow();
             ServiceEntity service = serviceRepository.findById(dto.serviceId).orElseThrow();
 
+            // 🚫 CHECK: hóa đơn đã PAID chưa
+            boolean isPaid = invoiceRepository
+                    .findByRoom_IdAndMonth(room.getId(), dto.month)
+                    .map(inv -> inv.getStatus() == InvoiceStatus.PAID)
+                    .orElse(false);
+
+            if (isPaid) {
+                throw new RuntimeException(
+                        "Tháng " + dto.month + " phòng " + room.getRoomName() + " đã thanh toán, không thể sửa!"
+                );
+            }
+
             String type = service.getCalculationType().name();
 
-            // ❌ bỏ dịch vụ không phải meter
             if (!type.equals("BY_METER")) return null;
 
             MeterReading existing = repo
@@ -60,7 +73,6 @@ public class MeterReadingServiceImpl implements MeterReadingService {
             m.setService(service);
             m.setMonth(dto.month);
 
-            // 🔥 LẤY THÁNG TRƯỚC (QUAN TRỌNG)
             MeterReading last = repo
                     .findTopByRoomAndServiceAndMonthLessThanOrderByMonthDesc(
                             room, service, dto.month
@@ -92,7 +104,6 @@ public class MeterReadingServiceImpl implements MeterReadingService {
                 .orElse(null);
     }
 
-    // ================= GET ALL (🔥 CHO UI) =================
     @Override
     public List<MeterReadingViewDTO> getAll(String month, Long serviceId, Long buildingId) {
 
@@ -102,7 +113,6 @@ public class MeterReadingServiceImpl implements MeterReadingService {
         ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
-        // ❌ nếu không phải meter → return rỗng
         if (!service.getCalculationType().name().equals("BY_METER")) {
             return List.of();
         }
@@ -113,12 +123,17 @@ public class MeterReadingServiceImpl implements MeterReadingService {
                     .findByRoomAndServiceAndMonth(room, service, month)
                     .orElse(null);
 
-            // 🔥 lấy tháng trước
             MeterReading last = repo
                     .findTopByRoomAndServiceAndMonthLessThanOrderByMonthDesc(
                             room, service, month
                     )
                     .orElse(null);
+
+            // 🔥 CHECK PAID
+            boolean isPaid = invoiceRepository
+                    .findByRoom_IdAndMonth(room.getId(), month)
+                    .map(inv -> inv.getStatus() == InvoiceStatus.PAID)
+                    .orElse(false);
 
             MeterReadingViewDTO dto = new MeterReadingViewDTO();
 
@@ -137,9 +152,10 @@ public class MeterReadingServiceImpl implements MeterReadingService {
             dto.setOldValue(last != null ? last.getNewValue() : 0.0);
             dto.setNewValue(current != null ? current.getNewValue() : null);
 
+            dto.setPaid(isPaid); // ✅ QUAN TRỌNG
+
             return dto;
 
         }).toList();
     }
-
 }

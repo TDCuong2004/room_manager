@@ -1,19 +1,7 @@
-<!-- <template>
-  <div>
-    <AppHeader />
-    <router-view />
-    <AppFooter />
-  </div>
-</template>
 
-<script setup>
-import AppFooter from './components/AppFooter.vue';
-import AppHeader from './components/AppHeader.vue';
-
-</script> -->
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
-    <AppHeader class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b" />
+    <AppHeader class="sticky top-0 z-40 bg-white border-b border-gray-200" />
 
     <div class="flex flex-1 max-w-[1400px] w-full mx-auto px-4 md:px-6 lg:px-8 gap-8">
       

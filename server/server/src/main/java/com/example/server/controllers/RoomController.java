@@ -81,7 +81,10 @@ public class RoomController {
             @RequestParam String status,
             @RequestParam String description,
             @RequestParam Long buildingId,
-            @RequestParam(required = false) List<MultipartFile> images
+            @RequestParam(required = false) List<MultipartFile> images,
+
+            // 🔥 THÊM CÁI NÀY
+            @RequestParam(required = false) List<String> keepImages
     ) {
 
         Rooms room = new Rooms();
@@ -96,7 +99,7 @@ public class RoomController {
         b.setId(buildingId);
         room.setBuilding(b);
 
-        return roomService.updateWithImages(id, room, images);
+        return roomService.updateWithImages(id, room, images, keepImages);
     }
 
     // Xóa

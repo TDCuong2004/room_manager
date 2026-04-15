@@ -61,28 +61,69 @@
         </thead>
 
         <tbody>
-          <tr v-for="row in readings" :key="row.roomId">
-            <td>{{ row.roomName }}</td>
-            <td>{{ row.customerName }}</td>
+          <tr 
+            v-for="row in readings" 
+            :key="row.roomId"
+            class="border-b hover:bg-gray-50 transition"
+          >
+            <td class="p-3 font-semibold text-gray-700">
+              {{ row.roomName }}
+            </td>
 
-            <td>{{ format(row.oldValue) }}</td>
+            <td class="p-3 text-gray-500">
+              {{ row.customerName }}
+            </td>
 
-            <td>
+            <td class="p-3">
+              {{ format(row.oldValue) }}
+            </td>
+
+            <td class="p-3">
               <input
                 v-model.number="row.newValue"
                 type="number"
-                class="input"
                 placeholder="Nhập"
+                :disabled="row.paid"
+                :class="[
+                  'w-24 px-2 py-1 rounded-lg border text-sm outline-none transition',
+                  row.paid
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'border-gray-300 focus:ring-2 focus:ring-rose-400'
+                ]"
               />
             </td>
 
-            <td class="usage">
+            <td class="p-3 font-bold text-gray-800">
               {{ calcUsage(row) }}
             </td>
 
-            <td>
-              <span :class="['status', getStatus(row)]">
-                {{ getStatus(row) }}
+            <td class="p-3">
+              <!-- Ưu tiên PAID -->
+              <span
+                v-if="row.paid"
+                class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-600"
+              >
+                Đã thanh toán
+              </span>
+
+              <span
+                v-else
+                :class="[
+                  'px-3 py-1 text-xs font-bold rounded-full',
+                  getStatus(row) === 'complete'
+                    ? 'bg-green-100 text-green-600'
+                    : getStatus(row) === 'missing'
+                    ? 'bg-red-100 text-red-500'
+                    : 'bg-yellow-100 text-yellow-600'
+                ]"
+              >
+                {{
+                  getStatus(row) === 'complete'
+                    ? 'Đã nhập'
+                    : getStatus(row) === 'missing'
+                    ? 'Chưa nhập'
+                    : 'Sai dữ liệu'
+                }}
               </span>
             </td>
           </tr>
@@ -207,12 +248,19 @@ export default {
     // SAVE ALL
     async saveAll() {
       try {
-        const payload = this.readings.map(r => ({
-          roomId: r.roomId,
-          serviceId: this.selectedServiceId, // ✅ đảm bảo đúng
-          month: this.selectedMonth,
-          newValue: r.newValue
-        }))
+        const payload = this.readings
+          .filter(r => !r.paid) // 🔥 CHẶN PAID
+          .map(r => ({
+            roomId: r.roomId,
+            serviceId: this.selectedServiceId,
+            month: this.selectedMonth,
+            newValue: r.newValue
+          }))
+
+        if (payload.length === 0) {
+          alert("Không có dữ liệu cần lưu")
+          return
+        }
 
         await api.post("/meter-readings/bulk", payload)
 
