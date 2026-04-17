@@ -256,8 +256,16 @@ export default {
 
       }catch(err){
         console.error(err)
-        this.showToast("Có lỗi xảy ra ❌", "error")
-      }finally{
+
+        const msg = err.response?.data?.error 
+
+        if (msg) {
+          this.showToast(msg, "error")
+        } else {
+          this.showToast("Có lỗi xảy ra ❌", "error")
+        }
+      }
+      finally{
         this.loading = false
       }
     }

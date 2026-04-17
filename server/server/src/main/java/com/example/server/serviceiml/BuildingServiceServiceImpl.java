@@ -7,7 +7,6 @@ import com.example.server.services.BuildingServiceService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
 @Service
 public class BuildingServiceServiceImpl implements BuildingServiceService {
 
@@ -17,31 +16,29 @@ public class BuildingServiceServiceImpl implements BuildingServiceService {
         this.repository = repository;
     }
 
+    // 🔥 1. LẤY TẤT CẢ SERVICE
     @Override
     public List<BuildingServiceDTO> getByBuilding(Long buildingId) {
 
         return repository.findByBuildingId(buildingId)
                 .stream()
-                .filter(bs -> bs.getService().getCalculationType().name().equals("BY_METER"))
-                .map(bs -> {
-
-                    BuildingServiceDTO dto = new BuildingServiceDTO();
-
-                    dto.setId(bs.getId());
-                    dto.setPrice(bs.getPrice());
-
-                    dto.setServiceId(bs.getService().getId());
-                    dto.setServiceName(bs.getService().getServiceName());
-                    dto.setCalculationType(
-                            bs.getService().getCalculationType().name()
-                    );
-
-                    return dto;
-
-                })
+                .map(this::mapToDTO)
                 .toList();
     }
 
+    // 🔥 2. CHỈ LẤY BY_METER (ĐIỆN)
+    public List<BuildingServiceDTO> getByBuildingMeter(Long buildingId) {
+
+        return repository.findByBuildingId(buildingId)
+                .stream()
+                .filter(bs ->
+                        bs.getService().getCalculationType().name().equals("BY_METER")
+                )
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    // CRUD
     @Override
     public BuildingService add(BuildingService entity) {
         return repository.save(entity);
@@ -50,5 +47,21 @@ public class BuildingServiceServiceImpl implements BuildingServiceService {
     @Override
     public void delete(Long id) {
         repository.deleteById(id);
+    }
+
+    // 🔥 MAP DTO
+    private BuildingServiceDTO mapToDTO(BuildingService bs) {
+        BuildingServiceDTO dto = new BuildingServiceDTO();
+
+        dto.setId(bs.getId());
+        dto.setPrice(bs.getPrice());
+
+        dto.setServiceId(bs.getService().getId());
+        dto.setServiceName(bs.getService().getServiceName());
+        dto.setCalculationType(
+                bs.getService().getCalculationType().name()
+        );
+
+        return dto;
     }
 }

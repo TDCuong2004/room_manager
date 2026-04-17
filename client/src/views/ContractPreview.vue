@@ -225,12 +225,16 @@ const amountToWords = (n) => {
 }
 
 const save = async () => {
-  if (isSaving.value) return
   try {
-    isSaving.value = true
+    console.log("FINAL SEND:", JSON.stringify(form.value, null, 2)) // 🔥 debug
+
     await api.post("/contracts", form.value)
-    alert("🚀 Hợp đồng đã được lưu thành công!")
-  } catch (err) { alert("❌ Lỗi khi lưu hợp đồng") } finally { isSaving.value = false }
+
+    alert("🚀 Lưu hợp đồng thành công!")
+  } catch (err) {
+    console.error(err)
+    alert("❌ Lỗi khi lưu")
+  }
 }
 
 const exportWord = () => {

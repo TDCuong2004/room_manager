@@ -133,13 +133,10 @@ public class ContractServiceImpl implements ContractService {
             // ================= LẤY CHỈ SỐ TỪ FE =================
             Double oldValue = null;
 
-            if (request.getMeterOldValues() != null) {
-                oldValue = request.getMeterOldValues().get(service.getId());
-            }
-
+            if (request.getMeterOldValues() != null) { oldValue = request.getMeterOldValues().get(service.getId()); }
             // fallback nếu không nhập
             m.setOldValue(oldValue != null ? oldValue : 0);
-            m.setNewValue(m.getOldValue());
+            m.setNewValue(null);
 
             meterReadingRepository.save(m);
         }

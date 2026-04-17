@@ -178,7 +178,7 @@ export default {
       if (!this.selectedBuildingId) return
 
       try {
-        const res = await api.get(`/building-services/${this.selectedBuildingId}`)
+        const res = await api.get(`/building-services/${this.selectedBuildingId}/meter`)
 
         this.services = res.data
 

@@ -149,7 +149,11 @@ public class MeterReadingServiceImpl implements MeterReadingService {
             dto.setServiceId(service.getId());
             dto.setServiceName(service.getServiceName());
 
-            dto.setOldValue(last != null ? last.getNewValue() : 0.0);
+            dto.setOldValue(
+                    current != null
+                            ? current.getOldValue()
+                            : (last != null ? last.getNewValue() : 0.0)
+            );
             dto.setNewValue(current != null ? current.getNewValue() : null);
 
             dto.setPaid(isPaid); // ✅ QUAN TRỌNG

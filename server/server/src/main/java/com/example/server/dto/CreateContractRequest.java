@@ -20,5 +20,4 @@ public class CreateContractRequest {
     private List<CustomerContractDTO> customers;
     private Map<Long, Double> meterOldValues;
 
-
 }

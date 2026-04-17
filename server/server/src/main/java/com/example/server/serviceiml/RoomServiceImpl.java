@@ -36,10 +36,24 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Rooms create(Rooms room) {
+
+        // 🔥 CHECK TRÙNG
+        boolean exists = roomRepository.existsByRoomNameAndBuilding_Id(
+                room.getRoomName(),
+                room.getBuilding().getId()
+        );
+
+        if (exists) {
+            throw new RuntimeException("Tên phòng đã tồn tại");
+        }
+
         room.setRoomCode(null);
+
         Rooms saved = roomRepository.save(room);
+
         String code = "R" + String.format("%03d", saved.getId());
         saved.setRoomCode(code);
+
         return roomRepository.save(saved);
     }
 
@@ -68,7 +82,18 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Rooms update(Long id, Rooms roomRequest) {
+
         Rooms room = getById(id);
+
+        boolean exists = roomRepository.existsByRoomNameAndBuilding_Id(
+                roomRequest.getRoomName(),
+                room.getBuilding().getId()
+        );
+
+        if (exists && !room.getRoomName().equals(roomRequest.getRoomName())) {
+            throw new RuntimeException("Tên phòng đã tồn tại");
+        }
+
         room.setRoomName(roomRequest.getRoomName());
         room.setPrice(roomRequest.getPrice());
         room.setArea(roomRequest.getArea());
@@ -96,6 +121,16 @@ public class RoomServiceImpl implements RoomService {
     // ================= CREATE WITH IMAGES =================
     @Override
     public Rooms createWithImages(Rooms room, List<MultipartFile> images) {
+
+        // 🔥 CHECK TRÙNG
+        boolean exists = roomRepository.existsByRoomNameAndBuilding_Id(
+                room.getRoomName(),
+                room.getBuilding().getId()
+        );
+
+        if (exists) {
+            throw new RuntimeException("Tên phòng đã tồn tại");
+        }
 
         Rooms savedRoom = roomRepository.save(room);
 
@@ -138,11 +173,22 @@ public class RoomServiceImpl implements RoomService {
             Long id,
             Rooms roomRequest,
             List<MultipartFile> images,
-            List<String> keepImages   // 🔥 thêm cái này
+            List<String> keepImages
     ) {
 
         Rooms room = getById(id);
 
+        // 🔥 CHECK TRÙNG (THÊM ĐOẠN NÀY)
+        boolean exists = roomRepository.existsByRoomNameAndBuilding_Id(
+                roomRequest.getRoomName(),
+                room.getBuilding().getId()
+        );
+
+        if (exists && !room.getRoomName().equals(roomRequest.getRoomName())) {
+            throw new RuntimeException("Tên phòng đã tồn tại");
+        }
+
+        // ================= UPDATE INFO =================
         room.setRoomName(roomRequest.getRoomName());
         room.setPrice(roomRequest.getPrice());
         room.setArea(roomRequest.getArea());

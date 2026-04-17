@@ -63,7 +63,7 @@
               <input
                 type="number"
                 step="0.01"
-                v-model.number="form.meterOldValues[s.id]"
+                v-model.number="form.meterOldValues[s.serviceId]"
                 placeholder="Nhập chỉ số"
                 class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
               />
@@ -259,7 +259,7 @@ const loadServices = async () => {
 
     // 🔥 init giá trị ban đầu = 0
     meterServices.value.forEach(s => {
-      form.value.meterOldValues[s.id] = 0
+      form.value.meterOldValues[s.serviceId] = null
     })
 
   } catch (e) {

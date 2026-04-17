@@ -29,7 +29,6 @@ public class BuildingServiceImpl implements BuildingService {
         return buildingRepository.findByUser_Id(user.getId());
     }
 
-    // tạo building
     @Override
     public Building create(Building building, String username) {
 

@@ -22,7 +22,10 @@ public class BuildingServiceController {
     public List<BuildingServiceDTO> getByBuilding(@PathVariable Long buildingId) {
         return service.getByBuilding(buildingId);
     }
-
+    @GetMapping("/{buildingId}/meter")
+    public List<BuildingServiceDTO> getMeter(@PathVariable Long buildingId) {
+        return service.getByBuildingMeter(buildingId);
+    }
     @PostMapping
     public BuildingService add(@RequestBody BuildingService entity) {
         return service.add(entity);

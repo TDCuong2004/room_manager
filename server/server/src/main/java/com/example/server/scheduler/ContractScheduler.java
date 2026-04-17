@@ -22,8 +22,8 @@ public class ContractScheduler {
     private final RoomRepository roomRepository;
 
     // chạy mỗi ngày lúc 00:00
-    @Scheduled(cron = "0 0 0 * * ?")
-//    @Scheduled(cron = "*/10 * * * * ?")
+//    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "*/10 * * * * ?")
     @Transactional
     public void updateContractStatus() {
 
