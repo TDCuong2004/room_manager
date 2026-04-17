@@ -1,8 +1,12 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.ContractCustomerResponse;
 import com.example.server.dto.ContractDTO;
 import com.example.server.dto.CreateContractRequest;
 import com.example.server.entity.Contract;
+import com.example.server.entity.ContractCustomer;
+import com.example.server.enums.ContractStatus;
+import com.example.server.repository.ContractRepository;
 import com.example.server.services.ContractService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +19,14 @@ import java.util.List;
 @CrossOrigin
 public class ContractController {
 
+    private final ContractRepository contractRepository;
     private final ContractService contractService;
-
-    public ContractController(ContractService contractService) {
+    public ContractController(
+            ContractService contractService,
+            ContractRepository contractRepository
+    ) {
         this.contractService = contractService;
+        this.contractRepository = contractRepository;
     }
 
     // ================= CREATE CONTRACT =================
@@ -53,5 +61,35 @@ public class ContractController {
 
         return ResponseEntity.ok("Renew success");
     }
+    @GetMapping("/room/{roomId}/tenant")
+    public ContractCustomerResponse getTenant(@PathVariable Long roomId) {
 
+        Contract contract = contractRepository
+                .findByRoom_IdAndStatus(roomId, ContractStatus.ACTIVE)
+                .orElse(null);
+
+        if (contract == null) return null;
+
+        // 👉 lấy người đại diện
+        ContractCustomer cc = contract.getContractCustomers()
+                .stream()
+                .filter(ContractCustomer::isRepresentative)
+                .findFirst()
+                .orElse(null);
+
+        if (cc == null) return null;
+
+        return new ContractCustomerResponse(cc);
+    }
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<?> getContractByRoom(@PathVariable Long roomId) {
+
+        Contract contract = contractRepository
+                .findByRoom_IdAndStatus(roomId, ContractStatus.ACTIVE)
+                .orElse(null);
+
+        if (contract == null) return ResponseEntity.ok(null);
+
+        return ResponseEntity.ok(new ContractDTO(contract));
+    }
 }

@@ -1,5 +1,7 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.ContractDTO;
+import com.example.server.entity.Contract;
 import com.example.server.entity.Customer;
 import com.example.server.repository.CustomerRepository;
 import org.springframework.web.bind.annotation.*;

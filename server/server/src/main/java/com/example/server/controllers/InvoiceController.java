@@ -1,6 +1,7 @@
 package com.example.server.controllers;
 
 import com.example.server.dto.InvoiceResponse;
+import com.example.server.dto.PaidInvoiceDTO;
 import com.example.server.services.InvoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +46,9 @@ public class InvoiceController {
                 body.get("paymentMethod")
         );
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/room/{roomId}/paid")
+    public List<PaidInvoiceDTO> getPaidInvoices(@PathVariable Long roomId) {
+        return invoiceService.getPaidInvoicesByRoom(roomId);
     }
 }

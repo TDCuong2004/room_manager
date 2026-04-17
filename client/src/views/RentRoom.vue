@@ -28,10 +28,10 @@
               <p class="text-xs text-gray-500 uppercase font-bold">Tên phòng</p>
               <p class="font-semibold">{{ room.roomName }}</p>
             </div>
-            <div>
+            <!-- <div>
               <p class="text-xs text-gray-500 uppercase font-bold">Mã phòng</p>
               <p class="font-semibold">{{ room.roomCode }}</p>
-            </div>
+            </div> -->
             <div>
               <p class="text-xs text-gray-500 uppercase font-bold">Giá niêm yết</p>
               <p class="font-bold text-blue-600">{{ formatMoney(room.price) }}đ</p>

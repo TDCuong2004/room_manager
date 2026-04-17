@@ -1,6 +1,7 @@
 package com.example.server.serviceiml;
 
 import com.example.server.dto.InvoiceResponse;
+import com.example.server.dto.PaidInvoiceDTO;
 import com.example.server.entity.*;
 import com.example.server.enums.*;
 import com.example.server.repository.*;
@@ -155,5 +156,15 @@ public class InvoiceServiceImpl implements InvoiceService {
         // ⚠️ convert String -> Enum
         invoice.setPaymentMethod(PaymentMethod.valueOf(paymentMethod));
     }
+    public List<PaidInvoiceDTO> getPaidInvoicesByRoom(Long roomId) {
 
+        return invoiceRepository
+                .findTop5ByRoom_IdAndStatusOrderByPaidAtDesc(
+                        roomId,
+                        InvoiceStatus.PAID
+                )
+                .stream()
+                .map(PaidInvoiceDTO::new)
+                .toList();
+    }
 }

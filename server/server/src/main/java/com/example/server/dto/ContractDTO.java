@@ -13,11 +13,13 @@ public class ContractDTO {
     private Long id;
     private String roomName;
     private LocalDate endDate;
+    private LocalDate startDate;
     private List<String> customers;
 
     public ContractDTO(Contract c) {
         this.id = c.getId();
         this.roomName = c.getRoom().getRoomName();
+        this.startDate = c.getStartDate();
         this.endDate = c.getEndDate();
 
         this.customers = c.getContractCustomers()

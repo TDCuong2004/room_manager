@@ -1,14 +1,22 @@
 <template>
-  <div class="modal-overlay" @click.self="close">
-
-    <div class="modal">
-
-      <h3>➕ Thêm dịch vụ</h3>
+  <div 
+    class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
+    @click.self="close"
+  >
+    <div class="w-[380px] bg-white rounded-2xl shadow-2xl p-6 animate-[fadeIn_.25s_ease]">
+      
+      <!-- TITLE -->
+      <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
+        ➕ Thêm dịch vụ
+      </h3>
 
       <!-- SERVICE -->
-      <label>Dịch vụ</label>
+      <label class="text-xs text-gray-500 font-semibold">Dịch vụ</label>
 
-      <select v-model="form.serviceId">
+      <select 
+        v-model="form.serviceId"
+        class="w-full mt-1 mb-4 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+      >
         <option disabled value="">Chọn dịch vụ</option>
 
         <option
@@ -22,34 +30,41 @@
       </select>
 
       <!-- PRICE -->
-      <label>Giá</label>
+      <label class="text-xs text-gray-500 font-semibold">Giá</label>
 
       <input
         type="number"
         v-model="form.price"
         placeholder="Nhập giá"
+        class="w-full mt-1 mb-5 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition"
       />
 
       <!-- ACTION -->
-      <div class="actions">
+      <div class="flex justify-end gap-2">
 
-        <button class="save-btn" @click="save">
-          Lưu
+        <button 
+          @click="close"
+          class="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-semibold hover:bg-gray-200 transition"
+        >
+          Hủy
         </button>
 
-        <button class="cancel-btn" @click="close">
-          Hủy
+        <button 
+          @click="save"
+          class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold shadow hover:scale-105 active:scale-95 transition"
+        >
+          Lưu
         </button>
 
       </div>
 
     </div>
-
   </div>
 </template>
 
 <script>
 import api from "@/api"
+import { useToast } from "vue-toastification"
 
 export default {
 
@@ -70,7 +85,6 @@ export default {
 
   computed:{
 
-    // 🔥 nâng cấp: mark service đã có
     enhancedServices(){
 
       const usedIds = this.buildingServices.map(
@@ -95,19 +109,19 @@ export default {
     },
 
     async save(){
+      const toast = useToast()
 
       if(!this.form.serviceId){
-        alert("Chọn dịch vụ")
+        toast.warning("⚠️ Vui lòng chọn dịch vụ")
         return
       }
 
       if(!this.form.price){
-        alert("Nhập giá")
+        toast.warning("⚠️ Vui lòng nhập giá")
         return
       }
 
       try{
-
         await api.post("/building-services",{
           building:{ id:this.buildingId },
           service:{ id:this.form.serviceId },
@@ -115,15 +129,14 @@ export default {
           isActive:true
         })
 
-        alert("Thêm thành công")
+        toast.success("✅ Thêm dịch vụ thành công")
 
         this.$emit("saved")
 
       }catch(err){
         console.error(err)
-        alert("Lỗi khi thêm")
+        toast.error("❌ Lỗi khi thêm dịch vụ")
       }
-
     }
 
   }
@@ -132,97 +145,14 @@ export default {
 </script>
 
 <style scoped>
-
-/* 🔥 FIX LỚN NHẤT: đảm bảo nổi trên header */
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.45);
-  backdrop-filter:blur(3px);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999; /* 🔥 FIX */
-}
-
-/* MODAL */
-.modal{
-  width:360px;
-  background:white;
-  padding:25px;
-  border-radius:16px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.25);
-  animation:fadeIn .25s ease;
-}
-
-/* ANIMATION */
-@keyframes fadeIn{
-  from{
-    transform:translateY(20px);
-    opacity:0;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
   }
-  to{
-    transform:translateY(0);
-    opacity:1;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-
-h3{
-  margin-bottom:15px;
-  font-size:18px;
-  color:#111827;
-}
-
-/* INPUT */
-label{
-  font-size:13px;
-  color:#6b7280;
-  display:block;
-  margin-bottom:5px;
-}
-
-select,input{
-  width:100%;
-  padding:10px;
-  margin-bottom:15px;
-  border-radius:10px;
-  border:1px solid #e5e7eb;
-  background:#f9fafb;
-  font-size:14px;
-}
-
-select:focus,input:focus{
-  outline:none;
-  border-color:#3b82f6;
-  background:white;
-}
-
-/* BUTTON */
-.actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-}
-
-.save-btn{
-  background:linear-gradient(135deg,#10b981,#059669);
-  color:white;
-  border:none;
-  padding:8px 16px;
-  border-radius:20px;
-  cursor:pointer;
-}
-
-.cancel-btn{
-  background:#e5e7eb;
-  border:none;
-  padding:8px 16px;
-  border-radius:20px;
-  cursor:pointer;
-}
-
-.cancel-btn:hover{
-  background:#d1d5db;
-}
-
 </style>

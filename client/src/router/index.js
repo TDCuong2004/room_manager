@@ -14,6 +14,8 @@ import RentRoom from "@/views/RentRoom.vue"
 import BuildingServices from "@/views/BuildingServices.vue"
 import InvoicePage from "@/views/InvoicePage.vue"
 import ContractPreview from "@/views/ContractPreview.vue"
+import RoomDetail from "@/views/RoomDetail.vue"
+
 const routes = [
   {
     path: "/",
@@ -78,6 +80,11 @@ const routes = [
   {
     path: "/contract-preview",
     component: ContractPreview
+  },
+  {
+    path: "/room/:id",
+    name: "RoomDetail",
+    component: RoomDetail
   },
 ]
 

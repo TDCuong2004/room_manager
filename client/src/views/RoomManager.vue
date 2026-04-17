@@ -40,7 +40,7 @@
         </div>
 
         <div class="space-y-2 text-sm text-gray-500 mb-6">
-          <p class="flex justify-between"><span>Mã phòng:</span> <b class="text-gray-700">{{ room.roomCode }}</b></p>
+          <!-- <p class="flex justify-between"><span>Mã phòng:</span> <b class="text-gray-700">{{ room.roomCode }}</b></p> -->
           <p class="flex justify-between"><span>Giá thuê:</span> <b class="text-rose-600">{{ formatMoney(room.price) }} đ</b></p>
           <p class="flex justify-between"><span>Diện tích:</span> <b class="text-gray-700">{{ room.area }} m²</b></p>
           <div class="pt-2 border-t border-gray-50">
@@ -61,7 +61,10 @@
           <button @click="openEdit(room)" class="py-2 bg-blue-50 text-blue-600 rounded-lg font-bold text-xs hover:bg-blue-100 transition-colors">
             📝 Sửa
           </button>
-          <button @click="deleteRoom(room.id)" class="py-2 bg-red-50 text-red-600 rounded-lg font-bold text-xs hover:bg-red-100 transition-colors">
+          <button 
+            @click="confirmDelete(room.id)" 
+            class="py-2 bg-red-50 text-red-600 rounded-lg font-bold text-xs hover:bg-red-100 transition-colors"
+          >
             🗑️ Xóa
           </button>
           <button 
@@ -74,8 +77,11 @@
           >
             {{ room.status === 'RENTED' ? 'Đã thuê' : '🔑 Thuê' }}
           </button>
-          <button @click="openMeter(room)" class="py-2 bg-purple-50 text-purple-600 rounded-lg font-bold text-xs hover:bg-purple-100 transition-colors">
-            ⚡ Dịch vụ
+          <button 
+            @click="goDetail(room.id)"
+            class="py-2 bg-purple-50 text-purple-600 rounded-lg font-bold text-xs hover:bg-purple-100 transition-colors"
+          >
+            Xem chi tiết
           </button>
         </div>
       </div>
@@ -101,13 +107,50 @@
       @saved="handleSaved"
     />
   </div>
+  <!-- DELETE MODAL -->
+<div 
+  v-if="showDeleteModal"
+  class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
+>
+  <div class="bg-white w-[350px] rounded-2xl p-6 shadow-2xl text-center">
+
+    <div class="text-4xl mb-3">⚠️</div>
+
+    <h3 class="text-lg font-bold text-gray-800 mb-2">
+      Xác nhận xóa
+    </h3>
+
+    <p class="text-sm text-gray-500 mb-5">
+      Bạn có chắc muốn xóa phòng này không?
+    </p>
+
+    <div class="flex gap-2">
+      
+      <button
+        @click="showDeleteModal=false"
+        class="flex-1 py-2 rounded-xl bg-gray-100 text-gray-600 font-semibold hover:bg-gray-200"
+      >
+        Hủy
+      </button>
+
+      <button
+        @click="deleteRoom"
+        class="flex-1 py-2 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600"
+      >
+        Xóa
+      </button>
+
+    </div>
+
+  </div>
+</div>
 </template>
 
 <script>
 import axios from "axios"
 import AddRoom from "@/Model/AddRoom.vue"
 import MeterModal from "@/Model/MeterModal.vue"
-
+import { useToast } from "vue-toastification"
 const api = axios.create({
   baseURL: "http://localhost:3000/api"
 })
@@ -127,6 +170,8 @@ export default {
       showModal: false,
       selectedRoom: null,
       showMeter: false,
+      showDeleteModal: false,
+      deleteId: null
     }
   },
   mounted() {
@@ -143,6 +188,9 @@ export default {
       this.selectedRoom = room
       this.showMeter = true
     },
+    goDetail(id) {
+      this.$router.push(`/room/${id}`)
+    },
     goBack() { this.$emit("back") },
     openAdd() {
           this.selectedRoom = null
@@ -157,20 +205,48 @@ export default {
         console.error(err)
       }
     },
+      confirmDelete(id) {
+      this.deleteId = id
+      this.showDeleteModal = true
+    },
     handleSaved() {
       this.showModal = false
       this.fetchRooms()
     },
-    openRent(room) {
-      this.$router.push({ path: `/rent/${room.id}` })
-    },
-    async deleteRoom(id) {
-      if(!confirm("Xóa phòng này?")) return
+
+    async openRent(room) {
+      const toast = useToast()
+
       try {
-        await api.delete(`/rooms/${id}`)
-        this.fetchRooms()
-      } catch (err) { console.error(err) }
+        const res = await api.get(`/building-services/${this.buildingId}`)
+
+        if (!res.data || res.data.length === 0) {
+          toast.warning("⚠️ Tòa nhà chưa có dịch vụ, Hãy nhập dịch vụ tòa!")
+          return
+        }
+
+        this.$router.push({ path: `/rent/${room.id}` })
+      } catch (err) {
+        console.error(err)
+        toast.error("Lỗi kiểm tra dịch vụ!")
+      }
     },
+    async deleteRoom() {
+      try {
+        await api.delete(`/rooms/${this.deleteId}`)
+        this.showDeleteModal = false
+        this.fetchRooms()
+
+        const toast = useToast()
+        toast.success("🗑️ Đã xóa phòng")
+
+      } catch (err) {
+        console.error(err)
+        const toast = useToast()
+        toast.error("Lỗi khi xóa")
+      }
+    },
+
     formatMoney(value) {
       return new Intl.NumberFormat("vi-VN").format(value)
     },
@@ -179,7 +255,9 @@ export default {
       if (status === "RENTED") return "bg-red-100 text-red-600"
       return "bg-amber-100 text-amber-600"
     }
-  }
+  },
+
+
 }
 </script>
 

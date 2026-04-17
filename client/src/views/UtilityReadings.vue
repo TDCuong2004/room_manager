@@ -182,7 +182,6 @@ export default {
 
         this.services = res.data
 
-        // ✅ FIX QUAN TRỌNG
         if (this.services.length > 0) {
           this.selectedServiceId = this.services[0].serviceId
           console.log("Auto serviceId:", this.selectedServiceId)

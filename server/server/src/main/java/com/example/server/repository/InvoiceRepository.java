@@ -1,6 +1,7 @@
 package com.example.server.repository;
 
 import com.example.server.entity.InvoiceEntity;
+import com.example.server.enums.InvoiceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +12,9 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Long> {
     boolean existsByRoomIdAndMonth(Long roomId, String month);
     Optional<InvoiceEntity> findByRoom_IdAndMonth(Long roomId, String month);
     List<InvoiceEntity> findByRoom_Building_IdAndMonth(Long buildingId, String month);
+    List<InvoiceEntity> findTop5ByRoom_IdAndStatusOrderByPaidAtDesc(
+            Long roomId,
+            InvoiceStatus status
+    );
+
 }
