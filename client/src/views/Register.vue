@@ -1,150 +1,161 @@
 <template>
-  <div class="register-page">
-    <div class="register-card">
-      <h2>Tạo tài khoản</h2>
-      <p class="subtitle">Chào mừng bạn đến với RoomManager</p>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
 
-      <form @submit.prevent="handleRegister">
+      <!-- HEADER -->
+      <h2 class="text-2xl font-bold text-gray-800">Tạo tài khoản</h2>
+      <p class="text-gray-500 text-sm mb-6">
+        Đăng ký để sử dụng RoomManager
+      </p>
 
-        <div class="form-group">
-          <label>Họ và tên</label>
-          <input v-model="form.name" type="text" required />
+      <form @submit.prevent="handleRegister" class="space-y-4">
+
+        <!-- FULL NAME -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700">Họ và tên</label>
+          <input
+            v-model="form.fullName"
+            type="text"
+            placeholder="Nguyễn Văn A"
+            class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-red-400 transition"
+            required
+          />
         </div>
 
-        <div class="form-group">
-          <label>Email</label>
-          <input v-model="form.email" type="email" required />
+        <!-- PHONE -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700">Số điện thoại</label>
+          <input
+            v-model="form.phone"
+            type="text"
+            placeholder="0901234567"
+            class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-red-400 transition"
+            required
+          />
         </div>
 
-        <div class="form-group">
-          <label>Mật khẩu</label>
-          <input v-model="form.password" type="password" required />
+        <!-- PASSWORD -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700">Mật khẩu</label>
+          <input
+            v-model="form.password"
+            type="password"
+            placeholder="••••••"
+            class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-red-400 transition"
+            required
+          />
         </div>
 
-        <div class="form-group">
-          <label>Nhập lại mật khẩu</label>
-          <input v-model="form.confirmPassword" type="password" required />
+        <!-- CONFIRM -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700">Nhập lại mật khẩu</label>
+          <input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="••••••"
+            class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-red-400 transition"
+            required
+          />
         </div>
 
-        <button type="submit" class="register-btn">
-          Đăng ký
+        <!-- ERROR -->
+        <p v-if="error" class="text-red-500 text-sm">
+          {{ error }}
+        </p>
+
+        <!-- BUTTON -->
+        <button
+          type="submit"
+          :disabled="loading"
+          class="w-full bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition disabled:opacity-50"
+        >
+          {{ loading ? "Đang xử lý..." : "Đăng ký" }}
         </button>
 
-        <p class="login-link">
+        <!-- LOGIN -->
+        <p class="text-center text-sm mt-4">
           Đã có tài khoản?
-          <router-link to="/login">Đăng nhập</router-link>
+          <router-link to="/login" class="text-red-500 font-semibold hover:underline">
+            Đăng nhập
+          </router-link>
         </p>
 
       </form>
     </div>
   </div>
 </template>
-
 <script setup>
-import { reactive } from "vue"
+import { reactive, ref } from "vue"
 import { useRouter } from "vue-router"
+import api from "@/api" // 🔥 dùng api.js của bạn
 
 const router = useRouter()
 
+const loading = ref(false)
+const error = ref("")
+
 const form = reactive({
-  name: "",
-  email: "",
+  fullName: "",
+  phone: "",
   password: "",
   confirmPassword: ""
 })
 
-const handleRegister = () => {
-  if (form.password !== form.confirmPassword) {
-    alert("Mật khẩu không khớp!")
+const handleRegister = async () => {
+  error.value = ""
+
+  // 🔥 validate họ tên
+  if (!form.fullName || form.fullName.length < 3) {
+    error.value = "Họ tên phải ít nhất 3 ký tự"
     return
   }
 
-  // TODO: gọi API backend sau
-  console.log("Đăng ký:", form)
+  // 🔥 validate SĐT VN chuẩn hơn
+  if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(form.phone)) {
+    error.value = "Số điện thoại không hợp lệ"
+    return
+  }
 
-  alert("Đăng ký thành công!")
-  router.push("/login")
+  // 🔥 validate password >= 8 ký tự
+  if (form.password.length < 8) {
+    error.value = "Mật khẩu phải ít nhất 8 ký tự"
+    return
+  }
+
+  // 🔥 confirm password
+  if (form.password !== form.confirmPassword) {
+    error.value = "Mật khẩu không khớp"
+    return
+  }
+
+  try {
+    loading.value = true
+
+    const res = await api.post("/auth/register", {
+      fullName: form.fullName,
+      phone: form.phone,
+      password: form.password,
+      confirmPassword: form.confirmPassword
+    })
+
+    if (res.data.token) {
+      localStorage.setItem("token", res.data.token)
+    }
+
+    alert("Đăng ký thành công!")
+    router.push("/")
+
+  } catch (err) {
+    error.value =
+      err.response?.data?.error ||
+      err.response?.data?.message ||
+      "Đăng ký thất bại"
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style scoped>
-.register-page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f7f7f7;
-}
 
-.register-card {
-  background: white;
-  padding: 40px;
-  width: 420px;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-}
-
-h2 {
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: #717171;
-  margin-bottom: 25px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 18px;
-}
-
-.form-group label {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.form-group input {
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 14px;
-  transition: 0.2s ease;
-}
-
-.form-group input:focus {
-  border-color: #ff385c;
-  outline: none;
-}
-
-.register-btn {
-  width: 100%;
-  padding: 14px;
-  border-radius: 999px;
-  background: #ff385c;
-  color: white;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: 0.2s ease;
-}
-
-.register-btn:hover {
-  transform: scale(1.02);
-}
-
-.login-link {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.login-link a {
-  color: #ff385c;
-  font-weight: 600;
-  text-decoration: none;
-}
-</style>
+</style> 

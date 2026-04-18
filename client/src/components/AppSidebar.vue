@@ -74,7 +74,9 @@ const handleSearch = async () => {
   try {
     const res = await api.post('/posts/search', search.value)
 
-    emit('updateResults', res.data)
+    window.dispatchEvent(
+      new CustomEvent("searchPosts", { detail: res.data })
+    )
 
   } catch (err) {
     console.error('Lỗi search:', err)
@@ -85,11 +87,10 @@ const handleSearch = async () => {
 const resetSearch = async () => {
   search.value = { location: '', maxPrice: null, area: null }
 
-  try {
-    const res = await api.get('/posts')
-    emit('updateResults', res.data)
-  } catch (err) {
-    console.error(err)
-  }
+  const res = await api.get('/posts')
+
+  window.dispatchEvent(
+    new CustomEvent("searchPosts", { detail: res.data })
+  )
 }
 </script>

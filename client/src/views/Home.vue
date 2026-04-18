@@ -10,7 +10,7 @@
         <img
           v-if="isLoggedIn"
           class="w-10 h-10 rounded-full object-cover border border-gray-100"
-          :src="currentUser?.avatar || 'https://i.pravatar.cc/40'"
+          :src="currentUser?.avatar || '/avatar-default.jpg'"
         />
 
         <div class="flex-1 bg-gray-100 hover:bg-gray-200 py-2.5 px-5 rounded-full text-gray-500 text-[15px] transition-colors font-medium">
@@ -20,16 +20,27 @@
 
       <div v-for="post in posts" :key="post.id" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-4 flex items-center gap-3 border-b border-gray-50">
-          <img
-            class="w-11 h-11 rounded-full border border-gray-100 object-cover"
-            :src="post.userAvatar || 'https://i.pravatar.cc/40'"
-          />
+          <div class="w-11 h-11 rounded-full bg-rose-500 text-white flex items-center justify-center overflow-hidden border border-gray-100">
+  
+            <!-- có avatar -->
+            <img 
+              v-if="post.userAvatar"
+              :src="post.userAvatar"
+              class="w-full h-full object-cover"
+            />
+
+            <!-- không có avatar -->
+            <span v-else class="font-semibold">
+              {{ post.userName?.charAt(0)?.toUpperCase() || "U" }}
+            </span>
+
+          </div>
           <div class="flex-1">
             <div class="font-bold text-gray-900 text-[15px] leading-tight">{{ post.userName || "Người dùng" }}</div>
             <div class="text-xs text-gray-400 mt-0.5">{{ formatTime(post.createdAt) }}</div>
           </div>
         </div>
-
+        
         <div class="px-4 py-4 space-y-3">
           <div v-if="post.phone" class="text-blue-600 font-bold text-sm flex items-center gap-1.5">
             <span class="bg-blue-100 p-1 rounded-md text-[10px]">📞</span> {{ post.phone }}
@@ -156,6 +167,12 @@ const lightbox = ref({ show: false, images: [], index: 0 })
 
 // --- UTILS ---
 const formatMoney = (v) => new Intl.NumberFormat("vi-VN").format(v || 0)
+
+
+//search
+const handleSearchPosts = (e) => {
+  posts.value = e.detail
+}
 
 const openGoogleMaps = (address) => {
   if (!address) return
@@ -311,13 +328,17 @@ onMounted(() => {
   fetchPosts()
   fetchRooms()
   fetchBuildings()
-
+  window.addEventListener("searchPosts", handleSearchPosts)
   window.addEventListener("userUpdated", () => {
     isLoggedIn.value = !!localStorage.getItem("token")
     currentUser.value = JSON.parse(localStorage.getItem("user") || "{}")
   })
 })
-onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); document.body.style.overflow = '' })
+onBeforeUnmount(() => {
+  window.removeEventListener("searchPosts", handleSearchPosts)
+  window.removeEventListener('keydown', handleKeydown)
+  document.body.style.overflow = ''
+})
 </script>
 
 <style scoped>

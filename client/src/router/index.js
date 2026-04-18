@@ -15,6 +15,7 @@ import BuildingServices from "@/views/BuildingServices.vue"
 import InvoicePage from "@/views/InvoicePage.vue"
 import ContractPreview from "@/views/ContractPreview.vue"
 import RoomDetail from "@/views/RoomDetail.vue"
+import Guide from "@/views/Guide.vue"
 
 const routes = [
   {
@@ -86,6 +87,10 @@ const routes = [
     name: "RoomDetail",
     component: RoomDetail
   },
+  {
+    path: "/guide",
+    component: () => import("@/views/Guide.vue")
+  }
 ]
 
 const router = createRouter({

@@ -12,13 +12,13 @@
 
       <!-- MENU -->
       <nav class="flex gap-[35px] font-semibold">
-        <router-link 
+        <!-- <router-link 
           to="/rooms"
           class="text-gray-800 hover:text-rose-500 transition"
           active-class="text-rose-500"
         >
           Phòng trống
-        </router-link>
+        </router-link> -->
 
         <router-link 
           to="/guide"
@@ -94,13 +94,16 @@
               class="w-[38px] h-[38px] rounded-full bg-rose-500 text-white flex items-center justify-center cursor-pointer overflow-hidden"
             >
               <img 
-                v-if="user.avatar" 
-                :src="user.avatar" 
-                class="w-full h-full object-cover"
-              />
-              <span v-else>
-                {{ user.fullName?.charAt(0) || "U" }}
-              </span>
+              v-if="user.avatar"
+              :src="user.avatar"
+              class="w-full h-full object-cover"
+            />
+
+            <img 
+              v-else
+              src="/avatar-default.jpg"
+              class="w-full h-full object-cover"
+            />
             </div>
 
             <div 
