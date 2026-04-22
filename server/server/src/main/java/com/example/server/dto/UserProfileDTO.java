@@ -11,11 +11,19 @@ public class UserProfileDTO {
     private String email;
     private String avatar;
 
+    private String bankName;
+    private String bankCode;
+    private String bankAccount;
+
     public UserProfileDTO(User user) {
         this.username = user.getUsername();
         this.fullName = user.getFullName();
         this.phone = user.getPhone();
         this.email = user.getEmail();
         this.avatar = user.getAvatar();
+
+        this.bankName = user.getBankName();
+        this.bankCode = user.getBankCode();
+        this.bankAccount = user.getBankAccount();
     }
 }

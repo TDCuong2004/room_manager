@@ -28,4 +28,13 @@ public class User {
 
     @Column(length = 255)
     private String avatar;
+
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "bank_code")
+    private String bankCode;
+
+    @Column(name = "bank_account")
+    private String bankAccount;
 }

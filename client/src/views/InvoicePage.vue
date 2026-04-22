@@ -211,7 +211,7 @@
 
 <script>
 import axios from "axios"
-
+import { useToast } from "vue-toastification"
 const api = axios.create({
   baseURL: "http://localhost:3000/api"
 })
@@ -231,20 +231,22 @@ export default {
       buildings: [],
 
       showDetail: false,
-      selectedInvoice: null, // ✅ dùng chung luôn
+      selectedInvoice: null, 
 
       details: [],
       showQR: false,
       qrUrl: "",
 
       showPaymentModal: false,
-      selectedPaymentMethod: ""
+      selectedPaymentMethod: "",
+      toast: null
     }
   },
 
   mounted() {
     this.setDefaultMonth()
     this.fetchBuildings()
+    this.toast = useToast()
   },
 
   methods: {
@@ -281,7 +283,7 @@ export default {
 
     async generateInvoices() {
       if (!this.selectedMonth || !this.selectedBuilding) {
-        alert("Vui lòng chọn đầy đủ tòa và tháng")
+        toast.warning("Chọn tòa và tháng trước nhé")
         return
       }
       try {
@@ -291,11 +293,11 @@ export default {
             month: this.selectedMonth
           }
         })
-        alert("🚀 Tính tiền thành công!")
+        this.toast.success("Tính tiền thành công 🚀")
         this.fetchInvoices()
       } catch (err) {
         console.error(err)
-        alert("Lỗi khi tính tiền")
+        this.toast.error("Lỗi khi tính tiền")
       }
     },
     handleStatusChange(inv) {
@@ -315,7 +317,7 @@ export default {
 
     async confirmPayment() {
       if (!this.selectedPaymentMethod) {
-        alert("Chọn phương thức thanh toán")
+        this.toast.warning("Chọn phương thức thanh toán")
         return
       }
 
@@ -332,7 +334,7 @@ export default {
 
       } catch (err) {
         console.error(err)
-        alert("Lỗi thanh toán")
+        toast.error("Thanh toán thất bại")
       }
     },
     async viewDetail(inv) {
@@ -346,11 +348,19 @@ export default {
 
     generateQR(inv) {
       this.selectedInvoice = inv
-      const bankCode = "970422" // MB Bank
-      const accountNo = "0353260919" 
+
+      if (!inv.bankCode || !inv.bankAccount) {
+        toast.error("Chưa cấu hình ngân hàng 😢")
+        return
+      }
+
+      const bankCode = inv.bankCode
+      const accountNo = inv.bankAccount
       const amount = inv.totalAmount
       const content = `PHONG_${inv.roomName}_T${inv.month}`
+
       this.qrUrl = `https://img.vietqr.io/image/${bankCode}-${accountNo}-compact.png?amount=${amount}&addInfo=${content}`
+
       this.showQR = true
     },
 
@@ -361,7 +371,7 @@ export default {
         inv.status = "PAID"
       } catch (err) {
         console.error(err)
-        alert("Lỗi cập nhật trạng thái")
+        toast.error("Lỗi cập nhật trạng thái")
       }
     },
 
@@ -375,7 +385,6 @@ export default {
 </script>
 
 <style scoped>
-/* Thêm hiệu ứng cho modal mượt mà hơn */
 .animate-in {
   animation: modalIn 0.3s ease-out;
 }

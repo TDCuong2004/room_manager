@@ -121,13 +121,23 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceRepository
                 .findByRoom_Building_IdAndMonth(buildingId, month)
                 .stream()
-                .map(inv -> new InvoiceResponse(
-                        inv.getId(),
-                        inv.getRoom().getRoomName(),
-                        inv.getMonth(),
-                        inv.getTotalAmount(),
-                        inv.getStatus()
-                ))
+                .map(inv -> {
+
+                    // 👉 lấy user từ building
+                    User user = inv.getRoom()
+                            .getBuilding()
+                            .getUser();
+
+                    return new InvoiceResponse(
+                            inv.getId(),
+                            inv.getRoom().getRoomName(),
+                            inv.getMonth(),
+                            inv.getTotalAmount(),
+                            inv.getStatus(),
+                            user.getBankCode(),
+                            user.getBankAccount()
+                    );
+                })
                 .toList();
     }
     @Override

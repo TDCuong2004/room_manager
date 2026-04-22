@@ -50,7 +50,9 @@ public class UserController {
         user.setPhone(req.getPhone());
         user.setEmail(req.getEmail());
         user.setAvatar(req.getAvatar());
-
+        user.setBankName(req.getBankName());
+        user.setBankCode(req.getBankCode());
+        user.setBankAccount(req.getBankAccount());
         userRepository.save(user);
 
         return new UserProfileDTO(user);

@@ -14,5 +14,7 @@ public class InvoiceResponse {
     private String roomName;
     private String month;
     private BigDecimal totalAmount;
-    private InvoiceStatus status; // ✅ dùng enum luôn
+    private InvoiceStatus status;
+    private String bankCode;
+    private String bankAccount;
 }

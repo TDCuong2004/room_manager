@@ -37,7 +37,19 @@
 
       <label>Email</label>
       <input v-model="user.email"/>
+      <label>Ngân hàng</label>
+      <select v-model="selectedBank" @change="handleBankChange">
+        <option value="">-- Chọn ngân hàng --</option>
+        <option v-for="b in banks" :key="b.bin" :value="b">
+          {{ b.shortName }}
+        </option>
+      </select>
 
+      <label>Mã ngân hàng</label>
+      <input v-model="user.bankCode" readonly />
+
+      <label>Số tài khoản</label>
+      <input v-model="user.bankAccount" placeholder="VD: 0353260919"/>
     </div>
 
     <button @click="updateProfile">
@@ -57,10 +69,19 @@ const user = ref({
   fullName: "",
   phone: "",
   email: "",
-  avatar: ""
-})
+  avatar: "",
 
-// 🔥 upload avatar
+  bankName: "",
+  bankCode: "",
+  bankAccount: ""
+})
+const banks = ref([])
+
+const fetchBanks = async () => {
+  const res = await fetch("https://api.vietqr.io/v2/banks")
+  const data = await res.json()
+  banks.value = data.data
+}
 const handleAvatar = async (e) => {
   const file = e.target.files[0]
   if (!file) return
@@ -88,8 +109,19 @@ const handleAvatar = async (e) => {
 const fetchProfile = async () => {
   const res = await api.get("/users/profile")
   user.value = res.data
+
+  // tìm bank tương ứng
+  selectedBank.value = banks.value.find(
+    b => b.code === user.value.bankCode || b.bin === user.value.bankCode
+  )
 }
 
+const selectedBank = ref(null)
+
+const handleBankChange = () => {
+  user.value.bankName = selectedBank.value.shortName
+  user.value.bankCode = selectedBank.value.bin
+}
 // ================= UPDATE =================
 const updateProfile = async () => {
   const res = await api.put("/users/profile", user.value)
@@ -102,7 +134,10 @@ const updateProfile = async () => {
   alert("Cập nhật thành công")
 }
 
-onMounted(fetchProfile)
+onMounted(async () => {
+  await fetchBanks()
+  await fetchProfile()
+})
 </script>
 
 <style scoped>
@@ -198,5 +233,23 @@ button{
 
 button:hover{
   background:#43a047;
+}.info select{
+  width:100%;
+  padding:8px;
+  margin:6px 0 15px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  background:white;
+  font-size:14px;
+  appearance: none; /* bỏ style mặc định */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* icon dropdown custom */
+  background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size:16px;
+  padding-right:35px;
 }
 </style>
