@@ -1,0 +1,66 @@
+<template>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+
+    <div class="bg-white p-8 rounded-2xl shadow w-[400px]">
+      <h2 class="text-2xl font-bold mb-6 text-center">Admin Register</h2>
+
+      <input v-model="username" placeholder="Username"
+        class="w-full mb-3 p-3 border rounded-lg" />
+
+      <input v-model="password" type="password" placeholder="Password"
+        class="w-full mb-3 p-3 border rounded-lg" />
+
+      <input v-model="fullName" placeholder="Full Name"
+        class="w-full mb-3 p-3 border rounded-lg" />
+
+      <input v-model="email" placeholder="Email"
+        class="w-full mb-4 p-3 border rounded-lg" />
+
+      <button @click="register"
+        class="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600">
+        Register
+      </button>
+
+      <p class="text-center mt-4 text-sm">
+        Đã có tài khoản?
+        <span @click="$router.push('/login')" 
+              class="text-blue-500 cursor-pointer">Đăng nhập</span>
+      </p>
+
+      <p v-if="error" class="text-red-500 text-sm mt-3 text-center">
+        {{ error }}
+      </p>
+    </div>
+
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import api from '../api'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const username = ref('')
+const password = ref('')
+const fullName = ref('')
+const email = ref('')
+const error = ref('')
+
+const register = async () => {
+  try {
+    await api.post('/auth/register', {
+      username: username.value,
+      password: password.value,
+      fullName: fullName.value,
+      email: email.value,
+      role: 'ADMIN'
+    })
+
+    router.push('/login')
+  } catch (err) {
+    error.value = err.response?.data?.error || 'Register failed'
+  }
+}
+</script>

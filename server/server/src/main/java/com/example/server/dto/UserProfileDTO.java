@@ -10,7 +10,7 @@ public class UserProfileDTO {
     private String phone;
     private String email;
     private String avatar;
-
+    private String role;
     private String bankName;
     private String bankCode;
     private String bankAccount;
@@ -21,6 +21,8 @@ public class UserProfileDTO {
         this.phone = user.getPhone();
         this.email = user.getEmail();
         this.avatar = user.getAvatar();
+
+        this.role = user.getRole().name(); // 🔥 QUAN TRỌNG
 
         this.bankName = user.getBankName();
         this.bankCode = user.getBankCode();

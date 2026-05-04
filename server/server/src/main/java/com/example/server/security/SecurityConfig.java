@@ -57,7 +57,7 @@ public class SecurityConfig {
                 new org.springframework.web.cors.CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                java.util.List.of("http://localhost:5173")
+                java.util.List.of("http://localhost:5173","http://localhost:5000")
         );
 
         configuration.setAllowedMethods(

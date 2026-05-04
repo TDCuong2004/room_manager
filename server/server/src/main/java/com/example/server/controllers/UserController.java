@@ -7,6 +7,8 @@ import com.example.server.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -56,5 +58,39 @@ public class UserController {
         userRepository.save(user);
 
         return new UserProfileDTO(user);
+    }
+
+    @GetMapping
+    public List<UserProfileDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(UserProfileDTO::new)
+                .toList();
+    }
+    // ================= UPDATE USER (ADMIN) =================
+    @PutMapping("/{id}")
+    public UserProfileDTO updateUser(
+            @PathVariable Long id,
+            @RequestBody UpdateProfileRequest req) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        user.setFullName(req.getFullName());
+        user.setPhone(req.getPhone());
+        user.setEmail(req.getEmail());
+        user.setAvatar(req.getAvatar());
+        user.setBankName(req.getBankName());
+        user.setBankCode(req.getBankCode());
+        user.setBankAccount(req.getBankAccount());
+
+        userRepository.save(user);
+
+        return new UserProfileDTO(user);
+    }
+    // ================= DELETE USER =================
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userRepository.deleteById(id);
     }
 }
