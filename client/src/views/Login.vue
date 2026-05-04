@@ -1,28 +1,56 @@
 <template>
-  <div class="wrapper">
-    <div class="card">
-      <h2>Đăng Nhập</h2>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
 
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label>Tên đăng nhập</label>
-          <input v-model="username" required />
+      <h2 class="text-2xl font-bold text-center text-rose-500 mb-6">
+        Đăng Nhập
+      </h2>
+
+      <form @submit.prevent="handleLogin" class="space-y-4">
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Tên đăng nhập
+          </label>
+          <input
+            v-model="username"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+          />
         </div>
 
-        <div class="form-group">
-          <label>Mật khẩu</label>
-          <input type="password" v-model="password" required />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Mật khẩu
+          </label>
+          <input
+            type="password"
+            v-model="password"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
+          />
         </div>
 
-        <button type="submit">Đăng nhập</button>
+        <button
+          type="submit"
+          class="w-full py-2 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition"
+        >
+          Đăng nhập
+        </button>
       </form>
 
-      <div class="extra-links">
-        <router-link to="/forgot-password">Quên mật khẩu?</router-link>
-        <router-link to="/register">Chưa có tài khoản? Đăng ký</router-link>
+      <div class="flex justify-between mt-4 text-sm">
+        <router-link to="/forgot-password" class="text-rose-500 hover:underline">
+          Quên mật khẩu?
+        </router-link>
+        <router-link to="/register" class="text-rose-500 hover:underline">
+          Đăng ký
+        </router-link>
       </div>
 
-      <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="error" class="text-red-500 text-center mt-3">
+        {{ error }}
+      </p>
     </div>
   </div>
 </template>
@@ -42,33 +70,33 @@ const handleLogin = async () => {
   error.value = ""
 
   try {
-    // ✅ dùng đúng api instance
     const res = await api.post("/auth/login", {
       username: username.value,
       password: password.value
     })
 
-    const token = res.data.token
+    const { token, role } = res.data
 
-    if (!token) {
-      throw new Error("Không nhận được token")
-    }
+    if (!token) throw new Error("No token")
 
-    // ✅ lưu token TRƯỚC
+    // lưu token + role
     localStorage.setItem("token", token)
+    localStorage.setItem("role", role)
 
-    // ✅ QUAN TRỌNG: đợi 1 tick để interceptor lấy token
-    await new Promise(resolve => setTimeout(resolve, 50))
+    // đợi interceptor
+    await new Promise(r => setTimeout(r, 50))
 
-    // ✅ gọi profile
     const profileRes = await api.get("/users/profile")
-
     localStorage.setItem("user", JSON.stringify(profileRes.data))
 
-    // cập nhật header
     window.dispatchEvent(new Event("userUpdated"))
 
-    router.push("/")
+    // 🔥 ĐIỀU HƯỚNG THEO ROLE
+    if (role === "ADMIN") {
+      router.push("/admin/users")
+    } else {
+      router.push("/")
+    }
 
   } catch (err) {
     console.error(err)
@@ -76,72 +104,3 @@ const handleLogin = async () => {
   }
 }
 </script>
-
-<style scoped>
-.wrapper {
-  height: calc(100vh - 150px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f7f7f7;
-}
-
-.card {
-  width: 360px;
-  padding: 30px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #ff385c;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
-}
-
-input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  background: #ff385c;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-.extra-links {
-  margin-top: 15px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-}
-
-.extra-links a {
-  text-decoration: none;
-  color: #ff385c;
-}
-
-.error {
-  color: red;
-  text-align: center;
-  margin-top: 10px;
-}
-</style>

@@ -1,10 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router"
 
-// Import các page
+// ===== IMPORT LAYOUT =====
+import UserLayout from "../layouts/UserLayout.vue"
+import AdminLayout from "../layouts/AdminLayout.vue"
+
+// ===== IMPORT PAGE =====
 import Home from "../views/Home.vue"
 import Login from "../views/Login.vue"
-import AddBuilding from "../Model/AddBuilding.vue"
 import Register from "../views/Register.vue"
+import AddBuilding from "../Model/AddBuilding.vue"
 import BuildingManager from "../views/BuildingManager.vue"
 import RoomManager from "../views/RoomManager.vue"
 import ProfileUser from "../views/ProfileUser.vue"
@@ -17,87 +21,94 @@ import ContractPreview from "@/views/ContractPreview.vue"
 import RoomDetail from "@/views/RoomDetail.vue"
 import Guide from "@/views/Guide.vue"
 
+// ===== ADMIN =====
+import AdminUsersManager from "../views/AdminUsers.vue"
+import AdminPostManager from "../views/AdminPostManager.vue"
+
 const routes = [
-  {
-    path: "/",
-    name: "Home",
-    component: Home,
-  },
+  // ================= AUTH =================
   {
     path: "/login",
-    name: "Login",
-    component: Login,
-  },
-  {
-    path: "/add-building",
-    name: "Add-building",
-    component: AddBuilding,
+    component: Login
   },
   {
     path: "/register",
-    name: "Register",
     component: Register
   },
+
+  // ================= USER =================
   {
-    path: "/buildingmanager",
-    name: "BuildingManager",
-    component: BuildingManager
+    path: "/",
+    component: UserLayout,
+    children: [
+      { path: "", component: Home },
+      { path: "add-building", component: AddBuilding },
+      { path: "buildingmanager", component: BuildingManager },
+      { path: "dashboard", component: Dashboard },
+      { path: "servicepage", component: ServicePage },
+      { path: "buildings/:id/rooms", component: RoomManager },
+      { path: "profile", component: ProfileUser },
+      { path: "building/:id/services", component: BuildingServices },
+      { path: "rent/:roomId", component: RentRoom, props: true },
+      { path: "invoices", component: InvoicePage },
+      { path: "contract-preview", component: ContractPreview },
+      { path: "room/:id", component: RoomDetail },
+      { path: "guide", component: Guide }
+    ]
   },
+
+  // ================= ADMIN =================
   {
-    path: "/dashboard",
-    name: "Dashboard",
-    component: Dashboard
-  },
-  {
-    path: "/servicepage",
-    name: "ServicePage",
-    component: ServicePage
-  },
-  {
-    path: "/buildings/:id/rooms",
-    name: "Rooms",
-    component: RoomManager
-  },
-  {
-    path: "/profile",
-    name: "Profile",
-    component: () => import("../views/ProfileUser.vue")
-  },
-  {
-    path: "/building/:id/services",
-    name: "BuildingServices",
-    component: BuildingServices
-  },
-  {
-    path: "/rent/:roomId",
-    name: "rentRoom",
-    component: RentRoom,
-    props: true
-  },
-  {
-    path: "/invoices",
-    component: () => import("../views/InvoicePage.vue")
-  },
-  {
-    path: "/contract-preview",
-    component: ContractPreview
-  },
-  {
-    path: "/room/:id",
-    name: "RoomDetail",
-    component: RoomDetail
-  },
-  {
-    path: "/guide",
-    component: () => import("@/views/Guide.vue")
+    path: "/admin",
+    component: AdminLayout,
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      {
+        path: "",
+        redirect: "/admin/users"
+      },
+      {
+        path: "users",
+        component: AdminUsersManager
+      },
+      {
+        path: "posts",
+        component: AdminPostManager
+      }
+    ]
   }
 ]
 
+// ===== CREATE ROUTER =====
 const router = createRouter({
   history: createWebHistory(),
-  routes,
-  linkActiveClass: "",         
-  linkExactActiveClass: "" 
+  routes
+})
+
+// ===== ROUTER GUARD =====
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token")
+  const role = localStorage.getItem("role")
+
+  // 🔐 cần login
+  if (to.meta.requiresAuth && !token) {
+    return next("/login")
+  }
+
+  // 🔐 chỉ admin
+  if (to.meta.requiresAdmin && role !== "ADMIN") {
+    return next("/")
+  }
+
+  // 🔁 đã login thì không vào login/register
+  if ((to.path === "/login" || to.path === "/register") && token) {
+    if (role === "ADMIN") {
+      return next("/admin/users")
+    }
+    return next("/")
+  }
+
+  next()
 })
 
 export default router

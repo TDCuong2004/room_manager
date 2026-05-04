@@ -40,7 +40,10 @@ public class AuthController {
 
         String token = jwtUtils.generateToken(user.getUsername());
 
-        return Map.of("token", token);
+        return Map.of(
+                "token", token,
+                "role", user.getRole().name()
+        );
     }
     //register
     @PostMapping("/register")
@@ -72,7 +75,8 @@ public class AuthController {
 
         return Map.of(
                 "message", "Đăng ký thành công",
-                "token", token
+                "token", token,
+                "role", user.getRole().name()
         );
     }
 }

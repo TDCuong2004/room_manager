@@ -7,7 +7,6 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 @Data
 @Entity
 @Table(name = "posts")
@@ -30,6 +29,13 @@ public class PostEntity {
     private PostStatus status;
 
     private LocalDateTime createdAt;
+
+    // 🔥 AI FIELDS
+    @Column(name = "ai_score")
+    private Double aiScore;
+
+    @Column(name = "ai_reason", columnDefinition = "TEXT")
+    private String aiReason;
 
     @ManyToOne
     @JoinColumn(name = "room_id")

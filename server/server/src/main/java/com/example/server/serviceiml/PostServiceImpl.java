@@ -26,7 +26,8 @@ import java.util.List;
 
 @Service
 public class PostServiceImpl implements PostService {
-
+//    @Autowired
+//    private AIService aiService;
     @Autowired
     private PostRepository postRepository;
 
@@ -129,13 +130,12 @@ public class PostServiceImpl implements PostService {
         if (p.getRoom() != null) {
             RoomResponse roomDTO = new RoomResponse();
 
-            roomDTO.setId(p.getRoom().getId()); // nên có
+            roomDTO.setId(p.getRoom().getId());
             roomDTO.setRoomName(p.getRoom().getRoomName());
             roomDTO.setPrice(p.getRoom().getPrice().doubleValue());
             roomDTO.setArea(p.getRoom().getArea().doubleValue());
-            roomDTO.setMaxPeople(p.getRoom().getMaxPeople()); // nên có
+            roomDTO.setMaxPeople(p.getRoom().getMaxPeople());
 
-            // 🔥 QUAN TRỌNG NHẤT
             roomDTO.setStatus(p.getRoom().getStatus().name());
 
             dto.setRoom(roomDTO);
