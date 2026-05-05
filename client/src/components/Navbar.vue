@@ -1,3 +1,17 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import api from '../api'
+
+const user = ref({})
+
+const fetchProfile = async () => {
+  const res = await api.get('/users/profile')
+  user.value = res.data
+}
+
+onMounted(fetchProfile)
+</script>
+
 <template>
   <div class="bg-white px-6 py-3 shadow flex justify-between items-center">
 
@@ -11,9 +25,11 @@
     <!-- RIGHT -->
     <div class="flex items-center gap-4">
       🔔
+
       <img
-        src="https://i.pravatar.cc/40"
+        :src="user.avatar || '/avatar-default.png'"
         class="w-10 h-10 rounded-full"
+        @error="e => e.target.src = '/avatar-default.jpg'"
       />
     </div>
 

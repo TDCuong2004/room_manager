@@ -24,7 +24,7 @@ import Guide from "@/views/Guide.vue"
 // ===== ADMIN =====
 import AdminUsersManager from "../views/AdminUsers.vue"
 import AdminPostManager from "../views/AdminPostManager.vue"
-
+import AdminDashboard from "../views/AdminDashboard.vue"
 const routes = [
   // ================= AUTH =================
   {
@@ -35,6 +35,7 @@ const routes = [
     path: "/register",
     component: Register
   },
+  
 
   // ================= USER =================
   {
@@ -70,6 +71,10 @@ const routes = [
       {
         path: "users",
         component: AdminUsersManager
+      },
+      {
+        path: "AdminDashboard",
+        component: AdminDashboard
       },
       {
         path: "posts",

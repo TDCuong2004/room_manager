@@ -3,10 +3,12 @@ package com.example.server.controllers;
 import com.example.server.dto.UpdateProfileRequest;
 import com.example.server.dto.UserProfileDTO;
 import com.example.server.entity.User;
+import com.example.server.enums.UserStatus;
 import com.example.server.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -84,13 +86,29 @@ public class UserController {
         user.setBankCode(req.getBankCode());
         user.setBankAccount(req.getBankAccount());
 
+        if (req.getStatus() != null) {
+            user.setStatus(req.getStatus()); // ✅ FIX
+        }
+
         userRepository.save(user);
 
         return new UserProfileDTO(user);
     }
     // ================= DELETE USER =================
-    @DeleteMapping("/{id}")
+    @PutMapping("/{id}/delete")
     public void deleteUser(@PathVariable Long id) {
-        userRepository.deleteById(id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        user.setStatus(UserStatus.DELETED); // 👈 SOFT DELETE
+
+        userRepository.save(user);
+    }
+    @GetMapping("/statuses")
+    public List<String> getStatuses() {
+        return Arrays.stream(UserStatus.values())
+                .map(Enum::name)
+                .toList();
     }
 }

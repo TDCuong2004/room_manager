@@ -1,7 +1,6 @@
 <template>
   <div class="flex bg-[#f6f6f6] min-h-screen">
 
-    <!-- CONTENT -->
     <div class="flex-1 p-8">
 
       <!-- HEADER -->
@@ -23,20 +22,19 @@
         </div>
       </div>
 
-      <!-- FILTER BAR -->
+      <!-- FILTER -->
       <div class="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm mb-6">
-
         <span class="text-xs text-gray-400">FILTERS:</span>
 
         <select v-model="statusFilter" class="border px-3 py-2 rounded-lg text-sm">
-          <option value="">Status: All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="FLAGGED">Flagged</option>
-          <option value="REPORTED">Reported</option>
+          <option value="">All</option>
+          <option value="DRAFT">Draft</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="HIDDEN">Hidden</option>
         </select>
 
         <button @click="clearFilter" class="ml-auto text-red-500 text-sm">
-          Clear all filters
+          Clear
         </button>
       </div>
 
@@ -51,23 +49,28 @@
 
           <!-- IMAGE -->
           <div class="relative">
-            <img
-              :src="p.image"
-              class="h-44 w-full object-cover"
-            />
+            <img :src="p.image" class="h-44 w-full object-cover" />
 
-            <!-- BADGE -->
+            <!-- STATUS -->
             <span
               class="absolute top-3 left-3 text-[10px] font-semibold px-2 py-1 rounded-full text-white"
               :class="statusClass(p.status)"
             >
               {{ p.status }}
             </span>
+
+            <!-- VIOLATION -->
+            <span
+              v-if="p.isViolated"
+              class="absolute top-3 right-3 text-[10px] px-2 py-1 bg-red-500 text-white rounded-full"
+            >
+              ⚠ BAD
+            </span>
           </div>
 
           <!-- CONTENT -->
           <div class="p-4">
-            <h3 class="font-semibold text-sm leading-tight mb-1">
+            <h3 class="font-semibold text-sm mb-1">
               {{ p.title }}
             </h3>
 
@@ -75,11 +78,15 @@
               ${{ p.price }}
             </p>
 
-            <p class="text-xs text-gray-400 mb-3">
+            <p class="text-xs text-gray-400 mb-2">
               {{ p.author }}
             </p>
 
-            <!-- BUTTONS -->
+            <p v-if="p.isViolated" class="text-xs text-red-500 mb-2">
+              ⚠ Nội dung vi phạm
+            </p>
+
+            <!-- BUTTONS (GIỮ NGUYÊN) -->
             <div class="flex flex-wrap gap-2">
               <button class="border px-3 py-1 rounded-md text-xs hover:bg-gray-100">
                 View Details
@@ -94,6 +101,7 @@
                 Delete Post
               </button>
             </div>
+
           </div>
 
         </div>
@@ -109,28 +117,71 @@ import { ref, computed, onMounted } from 'vue'
 import api from '../api'
 
 const posts = ref([])
-const loading = ref(false)
 const statusFilter = ref('')
 
-// fetch data
+// 🔥 normalize text
+const normalize = (text) => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+}
+
+// 🔥 LIST TỪ VI PHẠM (DỄ MỞ RỘNG)
+const badWords = [
+  "dit", "djt", "fuck", "lon", "cho", "ngu", "me may", "sex"
+]
+
+// 🔥 regex linh hoạt
+const buildRegex = (word) => {
+  return new RegExp(word.split('').join('[\\W_]*'), 'i')
+}
+
+// 🔥 check vi phạm
+const checkViolation = (text) => {
+  if (!text) return false
+
+  const t = normalize(text)
+
+  // check bad words
+  for (let w of badWords) {
+    const regex = buildRegex(w)
+    if (regex.test(t)) return true
+  }
+
+  // spam ký tự
+  if (/(.)\1{5,}/.test(t)) return true
+
+  // câu toxic
+  if (/(may|tao).*(ngu|cho)/i.test(t)) return true
+
+  return false
+}
+
+// 🔥 fetch
 const fetchPosts = async () => {
-  loading.value = true
   try {
     const res = await api.get('/posts')
 
-    posts.value = res.data.map(p => ({
-      id: p.id,
-      title: p.title,
-      price: p.price,
-      author: p.userName || 'Unknown',
-      status: p.status || 'ACTIVE',
-      image: p.images?.[0] || `https://picsum.photos/300/200?random=${p.id}`
-    }))
+    posts.value = res.data.map(p => {
+
+      const content = (p.title || '') + ' ' + (p.content || '')
+
+      return {
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        author: p.userName || 'Unknown',
+        status: p.status,
+
+        isViolated: checkViolation(content),
+
+        image: p.images?.[0] || `https://picsum.photos/300/200?random=${p.id}`
+      }
+    })
 
   } catch (err) {
     console.error(err)
-  } finally {
-    loading.value = false
   }
 }
 
@@ -144,15 +195,15 @@ const clearFilter = () => {
   statusFilter.value = ''
 }
 
-// status UI
+// 🎨 màu theo DB
 const statusClass = (status) => {
-  if (status === 'ACTIVE') return 'bg-green-500'
-  if (status === 'FLAGGED') return 'bg-orange-500'
-  if (status === 'REPORTED') return 'bg-red-500'
-  return 'bg-gray-400'
+  if (status === 'PUBLISHED') return 'bg-green-500'
+  if (status === 'DRAFT') return 'bg-gray-400'
+  if (status === 'HIDDEN') return 'bg-red-500'
+  return 'bg-gray-300'
 }
 
-// delete
+// delete (GIỮ NGUYÊN)
 const deletePost = async (id) => {
   if (!confirm('Delete this post?')) return
 

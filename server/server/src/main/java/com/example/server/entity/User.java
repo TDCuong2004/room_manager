@@ -1,6 +1,7 @@
 package com.example.server.entity;
 
 import com.example.server.enums.UserRole;
+import com.example.server.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -25,6 +26,10 @@ public class User {
     private String fullName;
     private String phone;
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
 
     @Column(length = 255)
     private String avatar;
