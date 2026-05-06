@@ -15,7 +15,9 @@
 
       <select 
         v-model="form.serviceId"
-        class="w-full mt-1 mb-4 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+        class="w-full mt-1 mb-4 px-3 py-2 rounded-xl border border-gray-300 bg-white text-sm shadow-sm
+              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+              transition"
       >
         <option disabled value="">Chọn dịch vụ</option>
 
@@ -32,12 +34,20 @@
       <!-- PRICE -->
       <label class="text-xs text-gray-500 font-semibold">Giá</label>
 
-      <input
-        type="number"
-        v-model="form.price"
-        placeholder="Nhập giá"
-        class="w-full mt-1 mb-5 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition"
-      />
+      <div class="relative">
+        <input
+          :value="formatMoneyInput(form.price)"
+          @input="handlePriceInput"
+          placeholder="Nhập giá"
+          class="w-full mt-1 mb-5 px-3 py-2 pr-14 rounded-xl border border-gray-300 bg-white text-sm shadow-sm
+                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500
+                transition"
+        />
+        
+        <span class="absolute right-3 inset-y-0 flex items-center text-gray-500 text-sm">
+          VNĐ
+        </span>
+      </div>
 
       <!-- ACTION -->
       <div class="flex justify-end gap-2">
@@ -107,7 +117,16 @@ export default {
     close(){
       this.$emit("close")
     },
+    formatMoneyInput(value){
+      if (!value) return ""
+      return Number(value).toLocaleString("vi-VN")
+    },
 
+    handlePriceInput(e){
+      const raw = e.target.value.replace(/\D/g, "") // chỉ giữ số
+      this.form.price = raw
+      e.target.value = this.formatMoneyInput(raw)
+    },
     async save(){
       const toast = useToast()
 

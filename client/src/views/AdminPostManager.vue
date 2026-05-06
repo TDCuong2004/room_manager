@@ -1,6 +1,5 @@
 <template>
   <div class="flex bg-[#f6f6f6] min-h-screen">
-
     <div class="flex-1 p-8">
 
       <!-- HEADER -->
@@ -8,7 +7,7 @@
         <div>
           <h1 class="text-2xl font-semibold">Content Management</h1>
           <p class="text-gray-400 text-sm">
-            Manage all published property listings across all regions.
+            Manage all property listings across all statuses.
           </p>
         </div>
 
@@ -86,7 +85,7 @@
               ⚠ Nội dung vi phạm
             </p>
 
-            <!-- BUTTONS (GIỮ NGUYÊN) -->
+            <!-- BUTTONS -->
             <div class="flex flex-wrap gap-2">
               <button class="border px-3 py-1 rounded-md text-xs hover:bg-gray-100">
                 View Details
@@ -113,13 +112,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import api from '../api'
-
+import { computed } from 'vue'
 const posts = ref([])
 const statusFilter = ref('')
-
-// 🔥 normalize text
+const filteredPosts = computed(() => {
+  return posts.value
+})
+// ===== TEXT FILTER (AI CHECK) =====
 const normalize = (text) => {
   return text
     .toLowerCase()
@@ -127,44 +128,37 @@ const normalize = (text) => {
     .replace(/[\u0300-\u036f]/g, "")
 }
 
-// 🔥 LIST TỪ VI PHẠM (DỄ MỞ RỘNG)
-const badWords = [
-  "dit", "djt", "fuck", "lon", "cho", "ngu", "me may", "sex"
-]
+const badWords = ["dit", "djt", "fuck", "lon", "cho", "ngu", "me may", "sex"]
 
-// 🔥 regex linh hoạt
 const buildRegex = (word) => {
   return new RegExp(word.split('').join('[\\W_]*'), 'i')
 }
 
-// 🔥 check vi phạm
 const checkViolation = (text) => {
   if (!text) return false
 
   const t = normalize(text)
 
-  // check bad words
   for (let w of badWords) {
-    const regex = buildRegex(w)
-    if (regex.test(t)) return true
+    if (buildRegex(w).test(t)) return true
   }
 
-  // spam ký tự
   if (/(.)\1{5,}/.test(t)) return true
-
-  // câu toxic
   if (/(may|tao).*(ngu|cho)/i.test(t)) return true
 
   return false
 }
 
-// 🔥 fetch
+// ===== FETCH =====
 const fetchPosts = async () => {
   try {
-    const res = await api.get('/posts')
+    const res = await api.get('/posts/admin', {
+      params: {
+        status: statusFilter.value || null
+      }
+    })
 
     posts.value = res.data.map(p => {
-
       const content = (p.title || '') + ' ' + (p.content || '')
 
       return {
@@ -173,9 +167,7 @@ const fetchPosts = async () => {
         price: p.price,
         author: p.userName || 'Unknown',
         status: p.status,
-
         isViolated: checkViolation(content),
-
         image: p.images?.[0] || `https://picsum.photos/300/200?random=${p.id}`
       }
     })
@@ -185,17 +177,17 @@ const fetchPosts = async () => {
   }
 }
 
-// filter
-const filteredPosts = computed(() => {
-  if (!statusFilter.value) return posts.value
-  return posts.value.filter(p => p.status === statusFilter.value)
+// ===== FILTER =====
+watch(statusFilter, () => {
+  fetchPosts()
 })
 
 const clearFilter = () => {
   statusFilter.value = ''
+  fetchPosts()
 }
 
-// 🎨 màu theo DB
+// ===== UI =====
 const statusClass = (status) => {
   if (status === 'PUBLISHED') return 'bg-green-500'
   if (status === 'DRAFT') return 'bg-gray-400'
@@ -203,16 +195,19 @@ const statusClass = (status) => {
   return 'bg-gray-300'
 }
 
-// delete (GIỮ NGUYÊN)
 const deletePost = async (id) => {
-  if (!confirm('Delete this post?')) return
+  if (!confirm('Hide this post?')) return
 
   try {
-    await api.delete(`/posts/${id}`)
-    posts.value = posts.value.filter(p => p.id !== id)
+    await api.put(`/posts/${id}/hide`)
+
+    // update UI ngay lập tức
+    const post = posts.value.find(p => p.id === id)
+    if (post) post.status = 'HIDDEN'
+
   } catch (err) {
     console.error(err)
-    alert('Delete failed')
+    alert('Hide failed')
   }
 }
 

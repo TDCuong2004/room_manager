@@ -29,14 +29,18 @@
   </div>
 
   <!-- GIÁ -->
-  <div>
-    <label class="text-xs font-semibold text-gray-500 uppercase">Giá</label>
-    <input 
-      type="number"
-      min="0"
-      v-model.number="form.price"
-      class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-400 outline-none transition"
+  <div class="relative">
+    <input
+      :value="formatMoneyInput(form.price)"
+      @input="handlePriceInput"
+      placeholder="Nhập giá"
+      class="w-full mt-1 p-3 pr-16 rounded-xl border border-gray-300 bg-white
+            focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
     />
+
+    <span class="absolute right-3 inset-y-0 flex items-center text-gray-500 text-sm">
+      VNĐ
+    </span>
   </div>
 
   <!-- DIỆN TÍCH -->
@@ -195,6 +199,16 @@ export default {
     showToast(msg, type="success"){
       this.toast = { show:true, message:msg, type }
       setTimeout(()=> this.toast.show=false, 2500)
+    },
+    formatMoneyInput(value){
+      if (!value) return ""
+      return Number(value).toLocaleString("vi-VN")
+    },
+
+    handlePriceInput(e){
+      const raw = e.target.value.replace(/\D/g, "") // chỉ giữ số
+      this.form.price = raw
+      e.target.value = this.formatMoneyInput(raw)
     },
     removeImage(index) {
       this.previewImages.splice(index, 1)

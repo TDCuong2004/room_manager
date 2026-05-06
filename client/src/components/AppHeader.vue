@@ -2,28 +2,25 @@
   <header class="bg-white border-b sticky top-0 z-50">
     <div class="flex items-center justify-between px-[60px] h-[75px]">
 
-      <!-- LOGO -->
       <div 
         @click="$router.push('/')"
-        class="text-[22px] font-bold text-rose-500 cursor-pointer"
+        class="flex items-center gap-2 text-[22px] font-bold text-[#4CAF50] cursor-pointer"
       >
-        🏠 RoomManager
+        <img 
+          src="../assets/home-logo.jpg" 
+          class="h-18 object-contain"
+        />
+        <span>RoomManager</span>
       </div>
 
       <!-- MENU -->
       <nav class="flex gap-[35px] font-semibold">
-        <!-- <router-link 
-          to="/rooms"
-          class="text-gray-800 hover:text-rose-500 transition"
-          active-class="text-rose-500"
-        >
-          Phòng trống
-        </router-link> -->
+        
 
         <router-link 
           to="/guide"
-          class="text-gray-800 hover:text-rose-500 transition"
-          active-class="text-rose-500"
+          class="text-gray-800 hover:text-[#4CAF50] transition"
+          active-class="text-[#4CAF50]"
         >
           Hướng dẫn thuê
         </router-link>
@@ -120,6 +117,7 @@
               <router-link 
                 to="/dashboard"
                 class="block px-4 py-3 hover:bg-gray-100"
+                @click="showDropdown = false"
               >
                 Phòng của tôi
               </router-link>
@@ -127,6 +125,7 @@
               <router-link 
                 to="/profile"
                 class="block px-4 py-3 hover:bg-gray-100"
+                @click="showDropdown = false"
               >
                 Hồ sơ
               </router-link>

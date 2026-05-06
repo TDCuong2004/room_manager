@@ -9,8 +9,9 @@
         <!-- CHỈ HIỆN AVATAR KHI LOGIN -->
         <img
           v-if="isLoggedIn"
-          class="w-10 h-10 rounded-full object-cover border border-gray-100"
           :src="currentUser?.avatar || '/avatar-default.jpg'"
+          @error="e => e.target.src = '/avatar-default.jpg'"
+          class="w-10 h-10 rounded-full object-cover"
         />
 
         <div class="flex-1 bg-gray-100 hover:bg-gray-200 py-2.5 px-5 rounded-full text-gray-500 text-[15px] transition-colors font-medium">
@@ -24,16 +25,10 @@
   
             <!-- có avatar -->
             <img 
-              v-if="post.userAvatar"
-              :src="post.userAvatar"
+              :src="post.userAvatar || '/avatar-default.jpg'"
+              @error="e => e.target.src = '/avatar-default.jpg'"
               class="w-full h-full object-cover"
             />
-
-            <!-- không có avatar -->
-            <span v-else class="font-semibold">
-              {{ post.userName?.charAt(0)?.toUpperCase() || "U" }}
-            </span>
-
           </div>
           <div class="flex-1">
             <div class="font-bold text-gray-900 text-[15px] leading-tight">{{ post.userName || "Người dùng" }}</div>

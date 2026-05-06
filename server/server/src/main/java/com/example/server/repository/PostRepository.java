@@ -1,6 +1,7 @@
 package com.example.server.repository;
 
 import com.example.server.entity.PostEntity;
+import com.example.server.enums.PostStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,10 +44,18 @@ ORDER BY p.createdAt DESC
     List<PostEntity> findByUsername(@Param("username") String username);
 
     @Query("""
-SELECT DISTINCT p FROM PostEntity p
-LEFT JOIN FETCH p.images
-WHERE p.status = 'PUBLISHED'
-ORDER BY p.createdAt DESC
-""")
+        SELECT DISTINCT p FROM PostEntity p
+        LEFT JOIN FETCH p.images
+        WHERE p.status = 'PUBLISHED'
+        ORDER BY p.createdAt DESC
+        """)
     List<PostEntity> findAllWithImages();
+    long countByStatus(PostStatus status);
+    @Query("""
+        SELECT DISTINCT p FROM PostEntity p
+        LEFT JOIN FETCH p.images
+        WHERE (:status IS NULL OR p.status = :status)
+        ORDER BY p.createdAt DESC
+        """)
+    List<PostEntity> findAllWithFilter(@Param("status") PostStatus status);
 }

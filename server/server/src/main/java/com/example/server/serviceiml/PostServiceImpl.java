@@ -195,14 +195,35 @@ public class PostServiceImpl implements PostService {
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post không tồn tại"));
 
-        // kiểm tra quyền
-        if (!post.getUser().getUsername().equals(username)) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        boolean isAdmin = user.getRole().name().equals("ADMIN");
+        boolean isOwner = post.getUser().getUsername().equals(username);
+
+        // 🔥 ADMIN hoặc OWNER đều được phép
+        if (!isAdmin && !isOwner) {
             throw new RuntimeException("Bạn không có quyền ẩn bài này");
         }
 
-        // 🔥 SOFT DELETE
         post.setStatus(PostStatus.HIDDEN);
-
         postRepository.save(post);
+    }
+    public List<PostResponse> getAllWithFilter(String status) {
+
+        PostStatus s = null;
+
+        if (status != null && !status.isEmpty()) {
+            try {
+                s = PostStatus.valueOf(status);
+            } catch (Exception e) {
+                s = null;
+            }
+        }
+
+        return postRepository.findAllWithFilter(s)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 }

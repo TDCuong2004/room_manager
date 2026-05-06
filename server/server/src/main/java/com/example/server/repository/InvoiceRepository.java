@@ -1,8 +1,10 @@
 package com.example.server.repository;
 
+import com.example.server.dto.MonthlyRevenueDTO;
 import com.example.server.entity.InvoiceEntity;
 import com.example.server.enums.InvoiceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +19,14 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Long> {
             InvoiceStatus status
     );
 
+    @Query("""
+SELECT new com.example.server.dto.MonthlyRevenueDTO(
+    i.month,
+    SUM(i.totalAmount)
+)
+FROM InvoiceEntity i
+GROUP BY i.month
+ORDER BY i.month
+""")
+    List<MonthlyRevenueDTO> getMonthlyRevenue();
 }

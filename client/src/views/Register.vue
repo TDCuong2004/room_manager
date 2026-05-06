@@ -88,9 +88,9 @@
 import { reactive, ref } from "vue"
 import { useRouter } from "vue-router"
 import api from "@/api" // 🔥 dùng api.js của bạn
-
+import { useToast } from "vue-toastification"
 const router = useRouter()
-
+const toast = useToast()
 const loading = ref(false)
 const error = ref("")
 
@@ -142,8 +142,11 @@ const handleRegister = async () => {
       localStorage.setItem("token", res.data.token)
     }
 
-    alert("Đăng ký thành công!")
-    router.push("/")
+    toast.success("Đăng ký thành công!")
+
+    setTimeout(() => {
+      router.push("/")
+    }, 1000)
 
   } catch (err) {
     error.value =

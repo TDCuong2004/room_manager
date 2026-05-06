@@ -12,4 +12,6 @@ public interface InvoiceService {
     public void updateStatus(Long id, String status, String paymentMethod);
     List<InvoiceResponse> getInvoices(Long buildingId, String month);
     List<PaidInvoiceDTO> getPaidInvoicesByRoom(Long roomId);
+
+
 }

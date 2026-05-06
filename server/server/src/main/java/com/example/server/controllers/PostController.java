@@ -103,4 +103,10 @@ public class PostController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @GetMapping("/admin")
+    public ResponseEntity<?> getPostsForAdmin(
+            @RequestParam(required = false) String status
+    ) {
+        return ResponseEntity.ok(postService.getAllWithFilter(status));
+    }
 }

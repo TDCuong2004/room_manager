@@ -37,9 +37,20 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         for (Rooms room : rooms) {
 
-            // ❌ đã có hóa đơn thì bỏ qua
-            if (invoiceRepository.existsByRoomIdAndMonth(room.getId(), month)) {
-                continue;
+            InvoiceEntity existingInvoice = invoiceRepository
+                    .findByRoom_IdAndMonth(room.getId(), month)
+                    .orElse(null);
+
+            if (existingInvoice != null) {
+
+                // ❌ nếu đã thanh toán thì bỏ qua
+                if (existingInvoice.getStatus() == InvoiceStatus.PAID) {
+                    continue;
+                }
+
+                // ✅ nếu chưa thanh toán → XÓA để tính lại
+                invoiceDetailRepository.deleteByInvoiceId(existingInvoice.getId());
+                invoiceRepository.delete(existingInvoice);
             }
 
             // lấy contract ACTIVE
@@ -72,6 +83,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
                 ServiceEntity service = bs.getService();
                 double amount = 0;
+                double quantity = 0;
 
                 switch (service.getCalculationType()) {
 
@@ -81,27 +93,28 @@ public class InvoiceServiceImpl implements InvoiceService {
                                 .orElse(null);
 
                         if (m != null) {
-                            amount = (m.getNewValue() - m.getOldValue())
-                                    * bs.getPrice().doubleValue();
+                            quantity = m.getNewValue() - m.getOldValue(); // ✅ số điện/nước
+                            amount = quantity * bs.getPrice().doubleValue();
                         }
                         break;
 
                     case BY_PERSON:
-                        amount = people * bs.getPrice().doubleValue();
+                        quantity = people; // ✅ số người
+                        amount = quantity * bs.getPrice().doubleValue();
                         break;
 
                     case FIXED:
+                        quantity = 1; // ✅ phí cố định
                         amount = bs.getPrice().doubleValue();
                         break;
                 }
 
                 serviceTotal += amount;
 
-                // ✅ dùng InvoiceDetailEntity
                 InvoiceDetailEntity detail = new InvoiceDetailEntity();
                 detail.setInvoice(invoice);
                 detail.setServiceName(service.getServiceName());
-                detail.setQuantity(BigDecimal.valueOf(1));
+                detail.setQuantity(BigDecimal.valueOf(quantity)); // ✅ FIX
                 detail.setUnitPrice(bs.getPrice());
                 detail.setAmount(BigDecimal.valueOf(amount));
 

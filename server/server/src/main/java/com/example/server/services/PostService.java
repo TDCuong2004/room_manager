@@ -15,5 +15,5 @@ public interface PostService {
     List<PostResponse> search(PostSearchRequest request);
     PostEntity create(PostDTO dto, String username, List<MultipartFile> files);
     List<PostResponse> getMyPosts(String username);
-
+    List<PostResponse> getAllWithFilter(String status);
 }

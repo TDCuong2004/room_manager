@@ -1,243 +1,201 @@
-<template>
-  <div class="modal-overlay">
-
-    <div class="modal">
-
-      <h2>📊 Nhập dịch vụ</h2>
-
-      <p class="room-name">
-        {{ room.roomName }}
-      </p>
-
-      <!-- MONTH -->
-      <label>Tháng</label>
-      <input type="month" v-model="month" />
-
-      <!-- SERVICES -->
-      <div
-        v-for="s in services"
-        :key="s.id"
-        class="form-group"
-      >
-
-        <label>
-          {{ s.serviceName }}
-        </label>
-
-        <!-- BY_METER -->
-        <input
-          v-if="s.calculationType === 'BY_METER'"
-          type="number"
-          placeholder="Số mới"
-          v-model="meterValues[s.serviceId]"
-        />
-
-        <!-- BY_PERSON -->
-        <input
-          v-else-if="s.calculationType === 'BY_PERSON'"
-          type="number"
-          placeholder="Số lượng"
-          v-model="personValues[s.serviceId]"
-        />
-
-        <!-- FIXED -->
-        <input
-          v-else
-          disabled
-          value="Phí cố định"
-        />
-
-      </div>
-
-      <!-- EMPTY -->
-      <p v-if="!services.length" class="empty">
-        Tòa này chưa có dịch vụ
-      </p>
-
-      <!-- ACTION -->
-      <div class="actions">
-        <button class="save" @click="save">
-          Lưu
-        </button>
-        <button class="cancel" @click="$emit('close')">
-          Hủy
-        </button>
-      </div>
-
-    </div>
-
-  </div>
-</template>
 
 <script>
 import api from "@/api"
+import { useToast } from "vue-toastification"
 
 export default {
+  props: ["room"],
 
-  props:["room"],
-
-  data(){
-    return{
-      services:[],
-      month:"",
-      meterValues:{},
-      personValues:{}
+  data() {
+    return {
+      services: [],
+      month: "",
+      meterValues: {},
+      personValues: {},
+      toast: null,
+      loading: false
     }
   },
 
-  async mounted(){
+  async mounted() {
+    this.toast = useToast()
 
-    try{
+    // auto chọn tháng hiện tại
+    const now = new Date()
+    this.month = now.toISOString().slice(0, 7)
 
+    try {
       const res = await api.get(
         `/building-services/${this.room.building.id}`
       )
-
-      console.log("services:", res.data)
-
       this.services = res.data
-
-    }catch(err){
-        console.error("ERROR:", err.response?.data || err)
-        alert(err.response?.data?.message || "Lỗi server")
+    } catch (err) {
+      this.toast.error(err.response?.data?.message || "Lỗi server")
     }
-
   },
 
-  methods:{
-
-    async save(){
-
-      if(!this.month){
-        alert("Chọn tháng trước")
+  methods: {
+    async save() {
+      if (!this.month) {
+        this.toast.warning("Chọn tháng trước")
         return
       }
 
       const payload = []
 
       this.services.forEach(s => {
-
         const type = s.calculationType
 
-        // BY_METER
-        if(type === "BY_METER"){
-
-          if(!this.meterValues[s.serviceId]) return
+        if (type === "BY_METER") {
+          if (!this.meterValues[s.serviceId]) return
 
           payload.push({
-            roomId:this.room.id,
-            serviceId:s.serviceId,
-            month:this.month,
-            newValue:this.meterValues[s.serviceId]
+            roomId: this.room.id,
+            serviceId: s.serviceId,
+            month: this.month,
+            newValue: this.meterValues[s.serviceId]
           })
         }
 
-        // BY_PERSON
-        if(type === "BY_PERSON"){
-
+        if (type === "BY_PERSON") {
           payload.push({
-            roomId:this.room.id,
-            serviceId:s.serviceId,
-            month:this.month,
-            quantity:this.personValues[s.serviceId] || 0
+            roomId: this.room.id,
+            serviceId: s.serviceId,
+            month: this.month,
+            quantity: this.personValues[s.serviceId] || 0
           })
         }
 
-        // FIXED
-        if(type === "FIXED"){
-
+        if (type === "FIXED") {
           payload.push({
-            roomId:this.room.id,
-            serviceId:s.serviceId,
-            month:this.month,
-            quantity:1
+            roomId: this.room.id,
+            serviceId: s.serviceId,
+            month: this.month,
+            quantity: 1
           })
         }
-
       })
 
-      if(!payload.length){
-        alert("Chưa nhập dữ liệu")
+      if (!payload.length) {
+        this.toast.warning("Chưa nhập dữ liệu")
         return
       }
 
-      try{
+      try {
+        this.loading = true
 
         await api.post("/meter-readings/bulk", payload)
 
-        alert("Lưu thành công")
+        this.toast.success("Lưu thành công 🎉")
         this.$emit("saved")
 
-      }catch(err){
-        console.error("ERROR:", err.response?.data || err)
-        alert(err.response?.data?.message || "Lỗi server")
-        }
-
+      } catch (err) {
+        this.toast.error(err.response?.data?.message || "Lỗi server")
+      } finally {
+        this.loading = false
+      }
     }
-
   }
-
 }
 </script>
 
-<style scoped>
-.modal-overlay{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  background:rgba(0,0,0,0.4);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:1000;
-}
+<template>
+  <!-- OVERLAY -->
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-.modal{
-  background:white;
-  padding:25px;
-  border-radius:16px;
-  width:400px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.2);
-}
+    <!-- MODAL -->
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-4">
 
-.form-group{
-  margin:12px 0;
-  display:flex;
-  flex-direction:column;
-}
+      <!-- HEADER -->
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">
+          📊 Nhập dịch vụ
+        </h2>
+        <p class="text-sm text-gray-500 mt-1">
+          {{ room.roomName }}
+        </p>
+      </div>
 
-input{
-  padding:8px;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
+      <!-- MONTH -->
+      <div>
+        <label class="text-sm font-medium text-gray-700">
+          Tháng
+        </label>
+        <input
+          type="month"
+          v-model="month"
+          class="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-400 outline-none"
+        />
+      </div>
 
-.actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin-top:15px;
-}
+      <!-- SERVICES -->
+      <div v-if="services.length" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
 
-.save{
-  background:#ff385c;
-  color:white;
-  border:none;
-  padding:8px 16px;
-  border-radius:8px;
-}
+        <div
+          v-for="s in services"
+          :key="s.id"
+          class="flex flex-col gap-1"
+        >
+          <label class="text-sm font-medium text-gray-700">
+            {{ s.serviceName }}
+          </label>
 
-.cancel{
-  background:#ccc;
-  border:none;
-  padding:8px 16px;
-  border-radius:8px;
-}
+          <!-- BY_METER -->
+          <input
+            v-if="s.calculationType === 'BY_METER'"
+            type="number"
+            placeholder="Nhập số mới"
+            v-model="meterValues[s.serviceId]"
+            class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+          />
 
-.empty{
-  margin-top:10px;
-  color:#888;
-}
-</style>
+          <!-- BY_PERSON -->
+          <input
+            v-else-if="s.calculationType === 'BY_PERSON'"
+            type="number"
+            placeholder="Số lượng"
+            v-model="personValues[s.serviceId]"
+            class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+          />
+
+          <!-- FIXED -->
+          <div
+            v-else
+            class="px-3 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm"
+          >
+            Phí cố định
+          </div>
+        </div>
+
+      </div>
+
+      <!-- EMPTY -->
+      <p v-else class="text-center text-gray-400 text-sm">
+        Tòa này chưa có dịch vụ
+      </p>
+
+      <!-- ACTION -->
+      <div class="flex justify-end gap-2 pt-2">
+
+        <button
+          @click="$emit('close')"
+          class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
+        >
+          Hủy
+        </button>
+
+        <button
+          @click="save"
+          :disabled="loading"
+          class="px-4 py-2 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition disabled:opacity-50"
+        >
+          <span v-if="loading">Đang lưu...</span>
+          <span v-else>Lưu</span>
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+</template>

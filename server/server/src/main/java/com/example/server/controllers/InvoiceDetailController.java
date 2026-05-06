@@ -1,5 +1,6 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.InvoiceDetailDTO;
 import com.example.server.entity.InvoiceDetailEntity;
 import com.example.server.repository.InvoiceDetailRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,16 @@ public class InvoiceDetailController {
     private final InvoiceDetailRepository repo;
 
     @GetMapping("/{invoiceId}")
-    public List<InvoiceDetailEntity> get(@PathVariable Long invoiceId){
-        return repo.findByInvoiceId(invoiceId);
+    public List<InvoiceDetailDTO> get(@PathVariable Long invoiceId){
+        return repo.findByInvoiceId(invoiceId)
+                .stream()
+                .map(d -> new InvoiceDetailDTO(
+                        d.getId(),
+                        d.getServiceName(),
+                        d.getQuantity(),
+                        d.getUnitPrice(),
+                        d.getAmount()
+                ))
+                .toList();
     }
 }
