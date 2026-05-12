@@ -203,8 +203,13 @@
 
         <div class="bg-white p-4 rounded-xl shadow text-center">
             <img
-                :src="tenant?.cccdFrontImage || defaultAvatar"
-                class="w-16 h-16 rounded-full mx-auto mb-2 object-cover"
+              :src="
+                tenant?.cccdFrontImage
+                  ? getImage(tenant.cccdFrontImage)
+                  : defaultAvatar
+              "
+              @error="e => e.target.src = defaultAvatar"
+              class="w-16 h-16 rounded-full mx-auto mb-2 object-cover border"
             />
 
             <p class="font-semibold">
@@ -246,8 +251,7 @@ const contract = ref(null)
 const tenant = ref(null)
 const meters = ref([])
 const payments = ref([])
-
-const defaultAvatar = "https://i.pravatar.cc/100"
+const defaultAvatar = "/avatar-default.jpg"
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api"
@@ -261,9 +265,13 @@ api.interceptors.request.use(config => {
 
 // ================= FIX IMAGE =================
 const getImage = (img) => {
-  if (!img) return "https://picsum.photos/600/400"
 
-  // nếu backend trả object
+  // 🔥 không có ảnh
+  if (!img) {
+    return "https://placehold.co/600x400?text=No+Image"
+  }
+
+  // backend trả object
   if (img.imageUrl) {
     return "http://localhost:3000" + img.imageUrl
   }

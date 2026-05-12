@@ -10,15 +10,7 @@
             Manage all property listings across all statuses.
           </p>
         </div>
-
-        <div class="flex gap-3">
-          <button class="bg-gray-200 px-4 py-2 rounded-lg text-sm">
-            Export CSV
-          </button>
-          <button class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm">
-            + Create Listing
-          </button>
-        </div>
+        
       </div>
 
       <!-- FILTER -->

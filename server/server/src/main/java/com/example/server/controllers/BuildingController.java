@@ -1,6 +1,7 @@
 package com.example.server.controllers;
 
 import com.example.server.entity.Building;
+import com.example.server.entity.Rooms;
 import com.example.server.services.BuildingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -43,4 +44,5 @@ public class BuildingController {
                        Principal principal) {
         buildingService.delete(id, principal.getName());
     }
+
 }

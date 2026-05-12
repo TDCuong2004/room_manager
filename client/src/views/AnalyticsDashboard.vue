@@ -13,7 +13,7 @@
     </div>
 
     <!-- FILTER -->
-    <div class="flex items-end gap-4 mb-8 flex-wrap">
+    <!-- <div class="flex items-end gap-4 mb-8 flex-wrap">
 
       <div>
         <p class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-2">
@@ -40,7 +40,7 @@
       >
         Áp dụng
       </button>
-    </div>
+    </div> -->
 
     <!-- STATS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
@@ -257,7 +257,7 @@ const loadData = async () => {
         }
       }),
 
-      axios.get(`${API}/rooms`, {
+      axios.get(`${API}/rooms/my`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`
         }

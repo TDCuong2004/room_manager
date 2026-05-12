@@ -12,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.http.MediaType;
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -112,4 +113,9 @@ public class RoomController {
         return roomService.getServicesByRoom(id);
     }
 
+    //lấy theo ng dung
+    @GetMapping("/my")
+    public List<Rooms> getMyRooms(Principal principal) {
+        return roomService.getAllByUser(principal.getName());
+    }
 }

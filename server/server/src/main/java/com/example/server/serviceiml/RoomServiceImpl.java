@@ -244,4 +244,8 @@ public class RoomServiceImpl implements RoomService {
     public void deleteImage(Long imageId) {
         roomImageRepository.deleteById(imageId);
     }
+    @Override
+    public List<Rooms> getAllByUser(String username) {
+        return roomRepository.findByBuilding_User_Username(username);
+    }
 }

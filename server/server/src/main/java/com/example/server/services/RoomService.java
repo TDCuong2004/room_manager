@@ -15,7 +15,7 @@ public interface RoomService {
     Rooms getById(Long id);
 
     List<Rooms> getByBuilding(Long buildingId);
-
+    List<Rooms> getAllByUser(String username);
     Rooms update(Long id, Rooms room);
     void deleteImage(Long imageId);
     void delete(Long id);

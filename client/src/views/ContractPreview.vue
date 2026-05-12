@@ -1,4 +1,15 @@
 <template>
+  <div
+    v-if="toast.show"
+    :class="[
+      'fixed top-5 right-5 z-[9999] px-5 py-3 rounded-2xl shadow-xl font-semibold transition-all border',
+      toast.type === 'error'
+        ? 'bg-red-50 text-red-600 border-red-200'
+        : 'bg-emerald-500 text-white border-emerald-500'
+    ]"
+  >
+    {{ toast.message }}
+  </div>
   <div class="preview-page bg-gray-100 min-h-screen p-8 font-serif no-print">
     <div class="max-w-[800px] mx-auto mb-6 flex justify-between items-center">
       <button class="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition" @click="$router.back()">
@@ -28,11 +39,40 @@
         <table class="no-border w-full mb-5" style="border: none; border-collapse: collapse; width: 100%;">
           <tr>
             <td style="border: none; padding-bottom: 10px;">
-              <h4 class="font-bold uppercase mb-1">BÊN A : BÊN CHO THUÊ (PHÒNG TRỌ)</h4>
-              <p>Đại diện : <span class="font-bold">Bà Nguyễn Thị Ngọc Diệp</span> <span class="ml-10">Điện thoại : 088 888 9696</span></p>
-              <p>CCCD số : 001196008731 <span class="ml-6">Cấp ngày 10/07/2021 tại Cục CSQLHC về TTXH</span></p>
-              <p>Địa chỉ thường trú : Hoàng Hoa Thám, Liễu Giai, Ba Đình, Hà Nội</p>
-              <p>Hiện là chủ ngôi nhà: Số 21 ngách 11 ngõ 298 Đê La Thành nhỏ, Phường Văn Miếu Quốc Tử Giám, Hà Nội.</p>
+              <h4 class="font-bold uppercase mb-1">
+                BÊN A : BÊN CHO THUÊ (PHÒNG TRỌ)
+              </h4>
+
+              <p>
+                Đại diện :
+                <span class="font-bold">
+                  {{ userLoggedIn?.fullName || '................................' }}
+                </span>
+
+                <span class="ml-10">
+                  Điện thoại :
+                  {{ userLoggedIn?.phone || '................' }}
+                </span>
+              </p>
+
+              <p>
+                CCCD số :
+                ....................................
+
+                <span class="ml-6">
+                  Cấp ngày .../.../....
+                </span>
+              </p>
+
+              <p>
+                Địa chỉ thường trú :
+                ............................................................
+              </p>
+
+              <p>
+                Hiện là chủ ngôi nhà:
+                ............................................................
+              </p>
             </td>
           </tr>
           <tr>
@@ -52,25 +92,48 @@
 
         <h4 class="font-bold uppercase mt-6 mb-1 underline italic text-sm">ĐIỀU 1: ĐỐI TƯỢNG CỦA HỢP ĐỒNG</h4>
         <p>Bên A đồng ý cho bên B thuê phòng <span class="font-bold underline text-blue-700">{{ room.roomName }}</span> tại ngôi nhà: số 21 ngách 11 ngõ 298 Đê La Thành nhỏ, Phường Văn Miếu Quốc Tử Giám.</p>
-        <p>Thời hạn thuê phòng là <span class="font-bold">12</span> tháng kể từ ngày {{ form.startDate }} đến ngày {{ form.endDate }}.</p>
+        <p>Thời hạn thuê phòng là <span class="font-bold">...</span> tháng kể từ ngày {{ form.startDate }} đến ngày {{ form.endDate }}.</p>
         <p>Mục đích thuê để lưu trú với số lượng người là: <span class="font-bold">{{ form.customers.length }}</span> người.</p>
 
         <h4 class="font-bold uppercase mt-6 mb-1 underline italic text-sm">ĐIỀU 2: GIÁ THUÊ VÀ PHƯƠNG THỨC THANH TOÁN</h4>
         <p class="font-bold italic underline mb-1">2.1 Giá Thuê</p>
         <p>Giá thuê phòng là: <span class="font-bold text-lg text-red-600">{{ formatMoney(form.rentPrice) }}</span> Vnđ/tháng.</p>
         <p>(Bằng chữ: <span class="italic font-semibold">{{ amountToWords(form.rentPrice) }}</span>)</p>
-        <ul class="list-disc ml-8 mt-2 italic text-[13px] text-gray-700 leading-snug">
-          <li>Tiền điện : 4.000 đ/kwh tính theo chỉ số công tơ riêng của phòng.</li>
-          <li>Tiền nước : 100.000đ/người. Tiền Internet: 100.000đ/phòng. Máy giặt: 50.000đ/người.</li>
-          <li>Tiền vệ sinh chung, điện chung: 50.000đ/người/tháng.</li>
+        <ul
+          class="list-disc ml-8 mt-2 italic text-[13px] text-gray-700 leading-snug"
+        >
+          <li v-for="(s, i) in services" :key="i">
+            {{ s.serviceName }} :
+            {{ formatMoney(s.price) }} đ
+
+            <span v-if="s.calculationType === 'BY_METER'">
+              /kWh tính theo chỉ số công tơ riêng của phòng.
+            </span>
+
+            <span v-else-if="s.calculationType === 'BY_PERSON'">
+              /người/tháng.
+            </span>
+
+            <span v-else-if="s.calculationType === 'FIXED'">
+              /phòng/tháng.
+            </span>
+          </li>
         </ul>
       </div>
 
       <div class="page-a4 shadow-xl mb-8 overflow-hidden bg-white mx-auto p-[20mm] relative text-[14px] leading-relaxed">
         <p class="font-bold italic underline mb-1">2.2 Phương Thức Thanh Toán</p>
         <p>Tiền nhà và các loại phí thanh toán 01 tháng một lần vào ngày 30-31 hàng tháng qua chuyển khoản:</p>
-        <p class="font-bold italic text-center py-2 bg-gray-50 border border-gray-100 rounded my-2">
-          NH Agribank. Chủ TK: NGUYEN THI NGOC DIEP. Số TK: 8888888889696
+        <p
+          class="font-bold italic text-center py-2 bg-gray-50 border border-gray-100 rounded my-2"
+        >
+          NH {{ userLoggedIn?.bankName || '................' }}.
+
+          Chủ TK:
+          {{ userLoggedIn?.fullName?.toUpperCase() || '................' }}.
+
+          Số TK:
+          {{ userLoggedIn?.bankAccount || '................' }}
         </p>
         <p>Bên B đặt cọc <span class="font-bold underline italic">{{ formatMoney(form.deposit) }}</span> vnđ (Bằng chữ: {{ amountToWords(form.deposit) }}). Tiền cọc sẽ được trả lại khi hết hạn hợp đồng và bên B thanh toán đầy đủ các loại phí.</p>
 
@@ -114,8 +177,10 @@
           <tr>
             <td style="text-align: center; width: 50%; vertical-align: top; border: none;">
               <p class="font-bold uppercase mb-20 underline text-[13px]">BÊN CHO THUÊ NHÀ</p>
-              <p class="font-bold" style="font-family: 'Dancing Script', cursive; font-size: 22px; color: #1e40af;">Diep</p>
-              <p class="font-bold mt-2">Nguyễn Thị Ngọc Diệp</p>
+
+              <p class="font-bold mt-2">
+                {{ userLoggedIn?.fullName || '................' }}
+              </p>
             </td>
             <td style="text-align: center; width: 50%; vertical-align: top; border: none;">
               <p class="font-bold uppercase mb-24 underline text-[13px]">BÊN THUÊ NHÀ</p>
@@ -190,10 +255,13 @@
 import { ref, onMounted, computed } from "vue"
 import api from "@/api"
 import { saveAs } from "file-saver"
+import { useRouter } from "vue-router"
 
-// const userLoggedIn = ref(JSON.parse(localStorage.getItem('user')));
-// console.log(userLoggedIn.value);
+const router = useRouter()
 
+const userLoggedIn = ref(JSON.parse(localStorage.getItem('user')));
+console.log(userLoggedIn.value);
+const services = ref([])
 const room = ref({})
 const form = ref({ customers: [] })
 const isSaving = ref(false)
@@ -204,19 +272,40 @@ const todayObj = computed(() => {
 })
 
 const equipment = ref([
-  { name: 'Giường ngủ gỗ', qty: '01', status: 'Bình thường' },
-  { name: 'Tủ quần áo gỗ 2 cánh', qty: '01', status: 'Bình thường' },
-  { name: 'Điều hòa Panasonic + Điều khiển', qty: '01', status: 'Hoạt động tốt' },
-  { name: 'Bình nóng lạnh Picenza', qty: '01', status: 'An toàn' },
-  { name: 'Bàn bếp + Chậu rửa inox', qty: '01', status: 'Sạch sẽ' },
+  { name: '', qty: '', status: ' ' },
+  { name: '', qty: '', status: '' },
+  { name: ' ', qty: '', status: '' },
+  { name: '', qty: '', status: '' },
+  { name: '', qty: '', status: '' },
 ])
+const toast = ref({
+  show: false,
+  message: "",
+  type: "success"
+})
 
+const showToast = (message, type = "success") => {
+  toast.value = {
+    show: true,
+    message,
+    type
+  }
+
+  setTimeout(() => {
+    toast.value.show = false
+  }, 2500)
+}
 onMounted(() => {
   const raw = sessionStorage.getItem("contractData")
+
   if (raw) {
     const data = JSON.parse(raw)
+
     room.value = data.room
     form.value = data.form
+
+    // FIX
+    services.value = data.room.services || []
   }
 })
 
@@ -229,14 +318,25 @@ const amountToWords = (n) => {
 
 const save = async () => {
   try {
-    console.log("FINAL SEND:", JSON.stringify(form.value, null, 2)) // 🔥 debug
+    isSaving.value = true
 
     await api.post("/contracts", form.value)
 
-    alert("🚀 Lưu hợp đồng thành công!")
+    showToast("🚀 Lưu hợp đồng thành công!")
+
+    sessionStorage.removeItem("contractData")
+
+    setTimeout(() => {
+      router.push({ path: "/dashboard" })
+    }, 1200)
+
   } catch (err) {
     console.error(err)
-    alert("❌ Lỗi khi lưu")
+
+    showToast("❌ Lỗi khi lưu hợp đồng", "error")
+
+  } finally {
+    isSaving.value = false
   }
 }
 

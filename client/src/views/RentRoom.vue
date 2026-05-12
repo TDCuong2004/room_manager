@@ -11,7 +11,7 @@
         </button>
         <h2 class="text-2xl font-bold text-gray-900 tracking-tight italic">📄 Tạo hợp đồng thuê phòng</h2>
       </header>
-      //toast
+      
       <div
         v-if="toast.show"
         :class="[
@@ -109,8 +109,9 @@
               <span class="text-blue-500">👥</span> Thành viên thuê phòng
             </h3>
             <button 
-              @click="addCustomer" 
-              class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold shadow-lg shadow-blue-100 transition-all active:scale-95"
+              @click="addCustomer"
+              :disabled="form.customers.length >= room.maxPeople"
+              class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl font-bold shadow-lg shadow-blue-100 transition-all active:scale-95"
             >
               + Thêm người
             </button>
@@ -266,6 +267,16 @@ const fetchRoom = async (id) => {
 }
 
 const addCustomer = () => {
+
+  // 🔥 check sức chứa phòng
+  if (form.value.customers.length >= room.value.maxPeople) {
+    showToast(
+      `Phòng này chỉ tối đa ${room.value.maxPeople} người`,
+      "error"
+    )
+    return
+  }
+
   form.value.customers.push({
     fullName: "",
     phone: "",
@@ -417,12 +428,15 @@ const goPreview = () => {
   }))
 
   sessionStorage.setItem(
-    "contractData",
-    JSON.stringify({
-      room: room.value,
-      form: form.value
-    })
-  )
+  "contractData",
+  JSON.stringify({
+    room: {
+      ...room.value,
+      services: services.value
+    },
+    form: form.value
+  })
+)
 
   router.push("/contract-preview")
 }
