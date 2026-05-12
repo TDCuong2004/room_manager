@@ -27,14 +27,12 @@ public class AdminServiceImpl implements AdminService {
         dto.setTotalUsers(userRepository.countByRole(UserRole.USER));
         dto.setTotalBuildings(buildingRepository.count());
         dto.setTotalRooms(roomRepository.count());
-        dto.setTotalPosts(postRepository.count());
+        dto.setTotalPosts(
+                postRepository.countByStatus(PostStatus.PUBLISHED)
+        );
 
         // ================= REVENUE =================
         dto.setMonthlyRevenue(invoiceRepository.getMonthlyRevenue());
-
-        // ================= GROWTH =================
-        dto.setNewUsers(5); // 👉 tạm, sau có thể tính theo tháng
-        dto.setActivePosts(postRepository.countByStatus(PostStatus.PUBLISHED));
 
         return dto;
     }

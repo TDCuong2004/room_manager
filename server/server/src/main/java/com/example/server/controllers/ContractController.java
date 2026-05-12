@@ -92,4 +92,18 @@ public class ContractController {
 
         return ResponseEntity.ok(new ContractDTO(contract));
     }
+    @GetMapping("/room/{roomId}/history")
+    public ResponseEntity<List<ContractDTO>> getContractHistory(
+            @PathVariable Long roomId
+    ) {
+
+        List<ContractDTO> list = contractRepository
+                .findHistoryByRoomId(roomId)
+                .stream()
+                .map(ContractDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(list);
+    }
+
 }

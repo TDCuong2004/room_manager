@@ -97,6 +97,76 @@
           <p v-else class="text-gray-400">Chưa có hợp đồng</p>
         </div>
 
+        <!-- CONTRACT HISTORY -->
+        <div class="bg-white p-4 rounded-xl shadow">
+          <h3 class="font-semibold mb-3">
+            Lịch sử hợp đồng
+          </h3>
+
+          <div v-if="contractHistory.length" class="space-y-3">
+
+            <div
+              v-for="c in contractHistory"
+              :key="c.id"
+              class="border rounded-xl p-3 bg-gray-50"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <p class="font-semibold">
+                  Hợp đồng #{{ c.id }}
+                </p>
+
+                <span
+                  class="text-xs px-2 py-1 rounded-full"
+                  :class="
+                    new Date(c.endDate) < new Date()
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-green-100 text-green-600'
+                  "
+                >
+                  {{
+                    new Date(c.endDate) < new Date()
+                      ? 'Đã hết hạn'
+                      : 'Còn hiệu lực'
+                  }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p class="text-gray-400 text-xs">Bắt đầu</p>
+                  <p>{{ formatDate(c.startDate) }}</p>
+                </div>
+
+                <div>
+                  <p class="text-gray-400 text-xs">Kết thúc</p>
+                  <p>{{ formatDate(c.endDate) }}</p>
+                </div>
+              </div>
+
+              <div class="mt-2">
+                <p class="text-gray-400 text-xs mb-1">
+                  Người đại diện
+                </p>
+
+                <div class="flex flex-wrap gap-2">
+                  <span
+                    v-for="(cus, i) in c.customers"
+                    :key="i"
+                    class="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs"
+                  >
+                    {{ cus }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <p v-else class="text-gray-400 text-sm">
+            Chưa có lịch sử hợp đồng
+          </p>
+        </div>
+
         <div class="bg-white p-4 rounded-xl shadow">
             <h3 class="font-semibold mb-3">Lịch sử thanh toán gần đây</h3>
 
@@ -157,20 +227,6 @@
             </div>
         </div>
 
-        <!-- METER -->
-        <!-- <div class="bg-white p-4 rounded-xl shadow">
-          <h4 class="font-semibold mb-2">Chỉ số</h4>
-
-          <div
-            v-for="m in meters"
-            :key="m.id"
-            class="flex justify-between text-sm"
-          >
-            <span>{{ m.serviceName }}</span>
-            <span>{{ m.value }}</span>
-          </div>
-        </div> -->
-
       </div>
     </div>
 
@@ -183,7 +239,7 @@ import { useRoute } from "vue-router"
 import axios from "axios"
 
 const route = useRoute()
-
+const contractHistory = ref([])
 const room = ref(null)
 const services = ref([])
 const contract = ref(null)
@@ -251,7 +307,12 @@ const fetchData = async () => {
     } catch {
     tenant.value = null
     }
-
+    try {
+      const resHistory = await api.get(`/contracts/room/${roomId}/history`)
+      contractHistory.value = resHistory.data
+    } catch {
+      contractHistory.value = []
+    }
     // METER
     const buildingId = room.value.building?.id
     if (buildingId) {

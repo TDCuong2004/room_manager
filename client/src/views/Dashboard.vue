@@ -42,14 +42,15 @@
         >
           <span class="text-lg">📝</span> Posts
         </button>
+        <button 
+          @click="goAnalytics" 
+          :class="[navItemClass, currentView === 'analytics' ? activeClass : inactiveClass]"
+        >
+          <span class="text-lg">📊</span> Analytics
+        </button>
       </nav>
 
-      <div class="p-4 border-t border-slate-700 bg-slate-900/50">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold">AD</div>
-          <p class="text-xs font-semibold text-slate-400 uppercase tracking-tighter text-ellipsis overflow-hidden">Admin Manager</p>
-        </div>
-      </div>
+      
     </aside>
 
     <main class="flex-1 overflow-y-auto bg-[#f8fafc] p-8 custom-scrollbar relative">
@@ -73,6 +74,7 @@
         
         <InvoicePage v-if="currentView === 'invoices'" />
         <PostManager v-if="currentView === 'posts'" />
+        <AnalyticsDashboard v-if="currentView === 'analytics'" />
         <BuildingServices
           v-if="currentView === 'buildingServices'"
           :buildingId="buildingId"
@@ -94,6 +96,8 @@ import RoomManager from "@/views/RoomManager.vue"
 import InvoicePage from "@/views/InvoicePage.vue"
 import UtilityReadings from "@/views/UtilityReadings.vue"
 import PostManager from "@/views/PostManager.vue"
+import AnalyticsDashboard from "@/views/AnalyticsDashboard.vue"
+
 const currentView = ref("buildings")
 const buildingId = ref(null)
 
@@ -126,6 +130,9 @@ const goInvoices = () => {
 }
 const goPosts = () => {
   currentView.value = "posts"
+}
+const goAnalytics = () => {
+  currentView.value = "analytics"
 }
 </script>
 

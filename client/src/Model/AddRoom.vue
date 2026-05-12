@@ -11,7 +11,10 @@
   <!-- MODAL -->
   <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" @click.self="$emit('close')">
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 animate-scaleIn">
+    <div
+      class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 animate-scaleIn
+      max-h-[90vh] overflow-y-auto custom-scroll"
+    >
 
       <h2 class="text-xl font-bold text-gray-800 mb-5">
         {{ room ? "Sửa phòng" : "Thêm phòng" }}
@@ -88,31 +91,90 @@
   </div>
 
   <!-- ẢNH -->
-  <div>
-    <label class="text-xs font-semibold text-gray-500 uppercase">Ảnh phòng</label>
-    <input type="file" multiple @change="handleImages" class="mt-1"/>
+<div>
+  <label class="text-xs font-semibold text-gray-500 uppercase block mb-2">
+    Ảnh phòng
+  </label>
 
-    <div v-if="previewImages.length" class="flex flex-wrap gap-2 mt-2">
+  <!-- UPLOAD BOX -->
+  <label
+    class="group relative flex flex-col items-center justify-center w-full min-h-[150px]
+    border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-orange-50
+    hover:border-orange-400 transition-all cursor-pointer overflow-hidden"
+  >
+
+    <input
+      type="file"
+      multiple
+      @change="handleImages"
+      class="hidden"
+    />
+
+    <!-- EMPTY -->
+    <div
+      v-if="!previewImages.length"
+      class="flex flex-col items-center justify-center py-8"
+    >
+      <div
+        class="w-14 h-14 rounded-2xl bg-white shadow flex items-center justify-center text-2xl
+        group-hover:scale-110 transition-all"
+      >
+        📸
+      </div>
+
+      <p class="mt-4 font-semibold text-gray-700">
+        Tải ảnh phòng
+      </p>
+
+      <p class="text-sm text-gray-400 mt-1">
+        PNG, JPG hoặc WEBP
+      </p>
+    </div>
+
+    <!-- PREVIEW -->
+    <div
+      v-else
+      class="grid grid-cols-3 gap-3 p-4 w-full"
+    >
       <div
         v-for="(img, i) in previewImages"
         :key="i"
-        class="relative"
+        class="relative group/img"
       >
         <img
           :src="img"
-          class="w-16 h-16 object-cover rounded-lg border"
+          class="w-full h-28 object-cover rounded-xl border border-gray-200 shadow-sm"
         />
 
-        <!-- ❌ nút x -->
+        <!-- overlay -->
+        <div
+          class="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100
+          transition-all rounded-xl"
+        />
+
+        <!-- delete -->
         <button
-          @click="removeImage(i)"
-          class="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center shadow"
+          type="button"
+          @click.stop="removeImage(i)"
+          class="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white
+          flex items-center justify-center text-xs shadow-lg opacity-0
+          group-hover/img:opacity-100 transition-all"
         >
           ✕
         </button>
       </div>
+
+      <!-- ADD MORE -->
+      <div
+        class="h-28 rounded-xl border-2 border-dashed border-gray-300
+        flex items-center justify-center text-3xl text-gray-400 bg-white"
+      >
+        +
+      </div>
     </div>
-  </div>
+
+  </label>
+</div>
 
   <!-- BUTTON -->
   <div class="flex justify-end gap-3 pt-3">
@@ -295,5 +357,17 @@ export default {
 }
 .animate-scaleIn {
   animation: scaleIn 0.2s ease;
+}
+.custom-scroll::-webkit-scrollbar{
+  width:6px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb{
+  background:#d1d5db;
+  border-radius:999px;
+}
+
+.custom-scroll::-webkit-scrollbar-track{
+  background:transparent;
 }
 </style>

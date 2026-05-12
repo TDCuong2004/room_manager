@@ -191,6 +191,9 @@ import { ref, onMounted, computed } from "vue"
 import api from "@/api"
 import { saveAs } from "file-saver"
 
+// const userLoggedIn = ref(JSON.parse(localStorage.getItem('user')));
+// console.log(userLoggedIn.value);
+
 const room = ref({})
 const form = ref({ customers: [] })
 const isSaving = ref(false)

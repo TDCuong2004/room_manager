@@ -19,4 +19,7 @@ public class ServiceEntity {
 
     @Enumerated(EnumType.STRING)
     private CalculationType calculationType;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

@@ -35,10 +35,10 @@
     </div>
 
     <!-- CHART + RIGHT -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div class="mb-6">
 
       <!-- BIỂU ĐỒ -->
-      <div class="bg-white p-6 rounded-xl shadow col-span-2">
+      <div class="bg-white p-6 rounded-xl shadow">
         <div class="flex justify-between mb-4">
           <h3 class="font-semibold">Doanh thu hệ thống</h3>
           <button class="text-red-500 text-sm">Xuất báo cáo</button>
@@ -66,62 +66,8 @@
         </div>
       </div>
 
-      <!-- PHÂN LOẠI -->
-      <div class="bg-white p-6 rounded-xl shadow">
-        <h3 class="font-semibold mb-4">Phân loại phòng</h3>
-
-        <div class="space-y-4 text-sm">
-
-          <div v-for="p in portfolio" :key="p.name">
-            <div class="flex justify-between mb-1">
-              <span>{{ p.name }}</span>
-              <span>{{ p.value }}%</span>
-            </div>
-
-            <div class="h-2 bg-gray-200 rounded">
-              <div
-                class="h-2 rounded"
-                :class="p.color"
-                :style="{ width: p.value + '%' }"
-              ></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
     </div>
 
-    <!-- INSIGHT -->
-    <div class="bg-white p-6 rounded-xl shadow">
-
-      <h3 class="font-semibold mb-2">
-        Thống kê tăng trưởng
-      </h3>
-
-      <p class="text-gray-600 text-sm mb-4">
-        Hệ thống đang phát triển ổn định với số lượng chủ trọ và bài đăng tăng lên.
-      </p>
-
-      <div class="flex gap-6 flex-wrap">
-
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <p class="text-gray-400 text-sm">Chủ trọ mới</p>
-          <h2 class="text-xl font-bold mt-1">
-            +{{ data.newUsers }}
-          </h2>
-        </div>
-
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <p class="text-gray-400 text-sm">Bài đăng hoạt động</p>
-          <h2 class="text-xl font-bold mt-1">
-            {{ data.activePosts }}
-          </h2>
-        </div>
-
-      </div>
-
-    </div>
 
   </div>
 </template>
@@ -141,13 +87,6 @@ const data = ref({
   activePosts: 0
 })
 
-// demo portfolio (có thể lấy BE sau)
-const portfolio = ref([
-  { name: 'Luxury Suites', value: 42, color: 'bg-red-500' },
-  { name: 'Urban Studios', value: 35, color: 'bg-pink-400' },
-  { name: 'Shared Rooms', value: 15, color: 'bg-green-400' },
-  { name: 'Penthouse', value: 8, color: 'bg-black' }
-])
 
 // ================= FETCH =================
 const fetchDashboard = async () => {

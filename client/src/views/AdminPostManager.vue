@@ -48,7 +48,21 @@
 
           <!-- IMAGE -->
           <div class="relative">
-            <img :src="p.image" class="h-44 w-full object-cover" />
+            <div class="h-44 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+              <img
+                v-if="p.images?.length"
+                :src="p.images[0]"
+                class="h-full w-full object-cover"
+              />
+
+              <div
+                v-else
+                class="flex flex-col items-center text-gray-400 text-sm"
+              >
+                <span class="text-4xl">🖼</span>
+                <p>No Image</p>
+              </div>
+            </div>
 
             <!-- STATUS -->
             <span
@@ -87,12 +101,13 @@
 
             <!-- BUTTONS -->
             <div class="flex flex-wrap gap-2">
-              <button class="border px-3 py-1 rounded-md text-xs hover:bg-gray-100">
+              <button
+                @click="openDetail(p)"
+                class="border px-3 py-1 rounded-md text-xs hover:bg-gray-100"
+              >
                 View Details
               </button>
-              <button class="border px-3 py-1 rounded-md text-xs hover:bg-gray-100">
-                Edit Post
-              </button>
+              
               <button
                 @click="deletePost(p.id)"
                 class="border px-3 py-1 rounded-md text-xs text-red-500 hover:bg-red-50"
@@ -109,6 +124,87 @@
 
     </div>
   </div>
+  <!-- DETAIL MODAL -->
+  <div
+    v-if="showModal"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white w-[600px] rounded-2xl overflow-hidden shadow-xl">
+
+      <!-- IMAGE -->
+      <div class="p-4">
+  
+        <!-- MAIN IMAGE -->
+        <div class="h-64 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+          <img
+            v-if="selectedPost?.images?.length"
+            :src="selectedImage"
+            class="w-full h-full object-cover"
+          />
+
+          <div v-else class="text-gray-400 text-center">
+            <div class="text-5xl">🖼</div>
+            <p>No Image</p>
+          </div>
+        </div>
+
+        <!-- THUMBNAILS -->
+        <div
+          v-if="selectedPost?.images?.length > 1"
+          class="flex gap-2 mt-3 overflow-x-auto"
+        >
+          <img
+            v-for="(img, index) in selectedPost.images"
+            :key="index"
+            :src="img"
+            @click="selectedImage = img"
+            class="w-20 h-20 object-cover rounded-lg border cursor-pointer hover:opacity-80"
+            :class="selectedImage === img ? 'border-red-500 border-2' : ''"
+          />
+        </div>
+
+      </div>
+
+      <!-- CONTENT -->
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="text-xl font-semibold">
+              {{ selectedPost?.title }}
+            </h2>
+
+            <p class="text-red-500 font-semibold mt-1">
+              ${{ selectedPost?.price }}
+            </p>
+          </div>
+
+          <button
+            @click="closeModal"
+            class="text-gray-400 hover:text-black text-xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="space-y-2 text-sm">
+          <p>
+            <span class="font-semibold">Author:</span>
+            {{ selectedPost?.author }}
+          </p>
+
+          <p>
+            <span class="font-semibold">Status:</span>
+            {{ selectedPost?.status }}
+          </p>
+
+          <p v-if="selectedPost?.isViolated" class="text-red-500">
+            ⚠ Nội dung vi phạm
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -116,7 +212,7 @@ import { ref, onMounted, watch } from 'vue'
 import api from '../api'
 import { computed } from 'vue'
 const posts = ref([])
-const statusFilter = ref('')
+const statusFilter = ref('PUBLISHED')
 const filteredPosts = computed(() => {
   return posts.value
 })
@@ -127,7 +223,18 @@ const normalize = (text) => {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
 }
+const selectedPost = ref(null)
+const showModal = ref(false)
+const selectedImage = ref(null)
+const openDetail = (post) => {
+  selectedPost.value = post
+  selectedImage.value = post.images?.[0] || null
+  showModal.value = true
+}
 
+const closeModal = () => {
+  showModal.value = false
+}
 const badWords = ["dit", "djt", "fuck", "lon", "cho", "ngu", "me may", "sex"]
 
 const buildRegex = (word) => {
@@ -168,7 +275,7 @@ const fetchPosts = async () => {
         author: p.userName || 'Unknown',
         status: p.status,
         isViolated: checkViolation(content),
-        image: p.images?.[0] || `https://picsum.photos/300/200?random=${p.id}`
+        images: p.images || []
       }
     })
 

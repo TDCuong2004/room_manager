@@ -17,7 +17,5 @@ public class DashboardDTO {
     private long totalPosts;
 
     private List<MonthlyRevenueDTO> monthlyRevenue;
-
-    private long newUsers;
     private long activePosts;
 }

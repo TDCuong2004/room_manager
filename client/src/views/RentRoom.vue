@@ -11,6 +11,18 @@
         </button>
         <h2 class="text-2xl font-bold text-gray-900 tracking-tight italic">📄 Tạo hợp đồng thuê phòng</h2>
       </header>
+      //toast
+      <div
+        v-if="toast.show"
+        :class="[
+          'fixed top-5 right-5 z-[9999] px-5 py-3 rounded-2xl shadow-xl font-semibold transition-all border',
+          toast.type === 'error'
+            ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+            : 'bg-emerald-500 text-white border-emerald-500'
+        ]"
+      >
+        {{ toast.message }}
+      </div>
 
       <div v-if="!room.id" class="flex flex-col items-center justify-center py-20 text-gray-400">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
@@ -28,10 +40,7 @@
               <p class="text-xs text-gray-500 uppercase font-bold">Tên phòng</p>
               <p class="font-semibold">{{ room.roomName }}</p>
             </div>
-            <!-- <div>
-              <p class="text-xs text-gray-500 uppercase font-bold">Mã phòng</p>
-              <p class="font-semibold">{{ room.roomCode }}</p>
-            </div> -->
+            
             <div>
               <p class="text-xs text-gray-500 uppercase font-bold">Giá niêm yết</p>
               <p class="font-bold text-blue-600">{{ formatMoney(room.price) }}đ</p>
@@ -197,6 +206,7 @@
 import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import api from "@/api"
+import { computed } from "vue"
 
 const route = useRoute()
 const router = useRouter()
@@ -204,6 +214,22 @@ const services = ref([])
 const meterServices = ref([])
 const room = ref({})
 const representativeIndex = ref(0)
+const toast = ref({
+  show: false,
+  message: "",
+  type: "success"
+})
+
+const minEndDate = computed(() => {
+
+  if (!form.value.startDate) return ""
+
+  const d = new Date(form.value.startDate)
+
+  d.setMonth(d.getMonth() + 1)
+
+  return d.toISOString().split("T")[0]
+})
 const form = ref({
   roomId: null,
   startDate: "",
@@ -216,6 +242,18 @@ const form = ref({
 })
 
 const formatMoney = (v) => new Intl.NumberFormat("vi-VN").format(v || 0)
+const showToast = (message, type = "success") => {
+
+  toast.value = {
+    show: true,
+    message,
+    type
+  }
+
+  setTimeout(() => {
+    toast.value.show = false
+  }, 2500)
+}
 
 const fetchRoom = async (id) => {
   try {
@@ -309,32 +347,82 @@ const uploadFile = async (event, index, type) => {
 }
 
 const goPreview = () => {
+
   if (!form.value.startDate || !form.value.endDate) {
-    alert("Vui lòng nhập thời hạn hợp đồng")
+    showToast("Vui lòng nhập thời hạn hợp đồng", "error")
+    return
+  }
+
+  // 🔥 check ngày kết thúc > ngày bắt đầu ít nhất 1 tháng
+  const start = new Date(form.value.startDate)
+  const end = new Date(form.value.endDate)
+
+  const minEnd = new Date(start)
+  minEnd.setMonth(minEnd.getMonth() + 1)
+
+  if (end < minEnd) {
+    showToast("Ngày kết thúc phải lớn hơn ngày bắt đầu ít nhất 1 tháng", "error")
     return
   }
 
   if (!form.value.customers.length) {
-    alert("Cần thêm ít nhất một người thuê")
+    showToast("Cần thêm ít nhất một người thuê", "error")
     return
+  }
+
+  // 🔥 validate khách thuê
+  for (const c of form.value.customers) {
+
+    if (!c.fullName?.trim()) {
+      showToast("Vui lòng nhập họ tên người thuê", "error")
+      return
+    }
+
+    if (!c.phone?.trim()) {
+      showToast("Vui lòng nhập số điện thoại", "error")
+      return
+    }
+
+    const phoneRegex = /^(0|\+84)[0-9]{9}$/
+
+    if (!phoneRegex.test(c.phone)) {
+      showToast("Số điện thoại không hợp lệ", "error")
+      return
+    }
+  }
+
+  // 🔥 validate chỉ số điện nước ban đầu
+  for (const s of meterServices.value) {
+
+    const value = form.value.meterOldValues[s.serviceId]
+
+    if (value === null || value === "" || value === undefined) {
+      showToast(`Vui lòng nhập chỉ số ban đầu cho ${s.serviceName}`, "error")
+      return
+    }
+
+    if (Number(value) < 0) {
+      showToast(`Chỉ số ${s.serviceName} không hợp lệ`, "error")
+      return
+    }
   }
 
   form.value.customers.forEach((c, i) => {
     c.representative = i === representativeIndex.value
   })
 
-  // 🔥 build meter list
   form.value.meterList = meterServices.value.map(s => ({
     serviceId: s.id,
     oldValue: form.value.meterOldValues[s.id]
   }))
 
-  console.log("FORM SEND:", form.value)
-
-  sessionStorage.setItem("contractData", JSON.stringify({
-    room: room.value,
-    form: form.value
-  }))
+  sessionStorage.setItem(
+    "contractData",
+    JSON.stringify({
+      room: room.value,
+      form: form.value
+    })
+  )
 
   router.push("/contract-preview")
 }

@@ -29,4 +29,14 @@ AND c.endDate BETWEEN :today AND :targetDate
     Optional<Contract> findTopByRoom_IdOrderByEndDateDesc(Long roomId);
     List<Contract> findByStatusAndEndDateBefore(ContractStatus status, LocalDate date);
     boolean existsByRoomIdAndStatus(Long roomId, ContractStatus status);
+    @Query("""
+    SELECT DISTINCT c
+    FROM Contract c
+    LEFT JOIN FETCH c.contractCustomers cc
+    LEFT JOIN FETCH cc.customer
+    WHERE c.room.id = :roomId
+    ORDER BY c.startDate DESC
+""")
+    List<Contract> findHistoryByRoomId(@Param("roomId") Long roomId);
+
 }

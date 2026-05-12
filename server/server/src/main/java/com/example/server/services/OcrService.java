@@ -1,6 +1,7 @@
 package com.example.server.services;
 
 import com.example.server.utils.MultipartInputStreamFileResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.*;
@@ -17,13 +18,16 @@ import java.util.Map;
 public class OcrService {
 
     private static final String API_URL = "https://api.fpt.ai/vision/idr/vnm";
-    private static final String API_KEY = "0PPOqE6P2wBwXNKgGbn0eLqiB0u8CLxo";
+
+    @Value("${fpt.api.key}")
+    private String apiKey;
 
     public Map<String, String> scanCCCD(MultipartFile file) {
 
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("api-key", API_KEY);
+            System.out.println("API KEY = " + apiKey);
+            headers.set("api-key", apiKey);
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
