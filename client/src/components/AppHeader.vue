@@ -107,13 +107,6 @@
               v-if="showDropdown"
               class="absolute right-0 top-[50px] w-[190px] bg-white rounded-xl shadow-xl overflow-hidden"
             >
-              <button 
-                @click="showLogoutModal = true"
-                class="w-full text-left px-4 py-3 hover:bg-gray-100"
-              >
-                Đăng xuất
-              </button>
-
               <router-link 
                 to="/dashboard"
                 class="block px-4 py-3 hover:bg-gray-100"
@@ -129,6 +122,19 @@
               >
                 Hồ sơ
               </router-link>
+              <router-link 
+                to="/change-password"
+                class="block px-4 py-3 hover:bg-gray-100"
+                @click="showDropdown = false"
+              >
+                Đổi mật khẩu
+              </router-link>
+              <button 
+                @click="showLogoutModal = true"
+                class="w-full text-left px-4 py-3 hover:bg-gray-100"
+              >
+                Đăng xuất
+              </button>
             </div>
           </div>
 

@@ -1,14 +1,20 @@
 package com.example.server.controllers;
 
+import com.example.server.dto.ChangePasswordRequest;
 import com.example.server.dto.RegisterRequest;
 import com.example.server.enums.UserRole;
 import com.example.server.security.jwt.JwtUtils;
 import com.example.server.entity.User;
 import com.example.server.repository.UserRepository;
+import com.example.server.services.MailService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -78,5 +84,103 @@ public class AuthController {
                 "token", token,
                 "role", user.getRole().name()
         );
+    }
+
+    @Autowired
+    private MailService mailService;
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @RequestParam String email
+    ) {
+
+        try {
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new RuntimeException("Email không tồn tại"));
+
+            // tạo mật khẩu mới
+            String newPassword = UUID.randomUUID()
+                    .toString()
+                    .replace("-", "")
+                    .substring(0, 8);
+
+            // encode password
+            user.setPassword(
+                    passwordEncoder.encode(newPassword)
+            );
+
+            userRepository.save(user);
+
+            // gửi mail
+            mailService.sendNewPassword(email, newPassword);
+
+            return ResponseEntity.ok(
+                    "Đã gửi mật khẩu mới qua email"
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
+    }
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            Principal principal
+    ) {
+
+        try {
+
+            if (principal == null) {
+                return ResponseEntity.status(401)
+                        .body("Chưa đăng nhập");
+            }
+
+            User user = userRepository
+                    .findByUsername(principal.getName())
+                    .orElseThrow();
+
+            // check password cũ
+            if (!passwordEncoder.matches(
+                    request.getOldPassword(),
+                    user.getPassword()
+            )) {
+
+                return ResponseEntity.badRequest()
+                        .body("Mật khẩu cũ không đúng");
+            }
+
+            // check confirm
+            if (!request.getNewPassword()
+                    .equals(request.getConfirmPassword())) {
+
+                return ResponseEntity.badRequest()
+                        .body("Xác nhận mật khẩu không khớp");
+            }
+
+            // update password
+            user.setPassword(
+                    passwordEncoder.encode(
+                            request.getNewPassword()
+                    )
+            );
+
+            userRepository.save(user);
+
+            return ResponseEntity.ok(
+                    "Đổi mật khẩu thành công"
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return ResponseEntity.badRequest()
+                    .body(e.getMessage());
+        }
     }
 }

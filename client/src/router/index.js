@@ -20,6 +20,8 @@ import InvoicePage from "@/views/InvoicePage.vue"
 import ContractPreview from "@/views/ContractPreview.vue"
 import RoomDetail from "@/views/RoomDetail.vue"
 import Guide from "@/views/Guide.vue"
+import ForgotPassword from "@/views/ForgotPassword.vue"
+import ChangePassword from "@/views/ChangePassword.vue"
 
 // ===== ADMIN =====
 import AdminUsersManager from "../views/AdminUsers.vue"
@@ -35,7 +37,10 @@ const routes = [
     path: "/register",
     component: Register
   },
-  
+  {
+    path: "/forgot-password",
+    component: () => import("@/views/ForgotPassword.vue")
+  },
 
   // ================= USER =================
   {
@@ -54,7 +59,8 @@ const routes = [
       { path: "invoices", component: InvoicePage },
       { path: "contract-preview", component: ContractPreview },
       { path: "room/:id", component: RoomDetail },
-      { path: "guide", component: Guide }
+      { path: "guide", component: Guide },
+      { path: "change-password", component: ChangePassword },
     ]
   },
 
