@@ -1,115 +1,177 @@
 <template>
-  <div class="utility-page">
-
+  <div class="p-5">
+    <!-- TOAST -->
+    <div
+      v-if="toast.show"
+      :class="[
+        'fixed top-5 right-5 px-5 py-3 rounded-xl shadow-lg text-white z-50 transition',
+        toast.type === 'success'
+          ? 'bg-emerald-500'
+          : 'bg-red-500'
+      ]"
+    >
+      {{ toast.message }}
+    </div>
     <!-- HEADER -->
-    <div class="page-header">
+    <div class="flex justify-between items-center mb-5">
       <div>
-        <h2>⚡ Utility Readings</h2>
-        <p>Nhập và quản lý chỉ số dịch vụ theo phòng</p>
+        <h2 class="text-2xl font-bold text-gray-800">
+          ⚡ Utility Readings
+        </h2>
+
+        <p class="text-sm text-gray-500">
+          Nhập và quản lý chỉ số dịch vụ theo phòng
+        </p>
       </div>
 
-      <div class="actions">
-        <button class="btn secondary">Export</button>
-        <button class="btn primary" @click="saveAll">Save All</button>
+      <div class="flex gap-3">
+        <button
+          class="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 transition"
+        >
+          Export
+        </button>
+
+        <button
+          @click="saveAll"
+          class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white transition"
+        >
+          Save All
+        </button>
       </div>
     </div>
 
     <!-- FILTER -->
-    <div class="filters">
+    <div class="flex justify-between items-center mb-5">
 
-      <!-- 🔥 SERVICES -->
-      <div class="tabs">
+      <!-- SERVICES -->
+      <div class="flex gap-3">
+
         <button
           v-for="s in services"
-          :key="s.id"
-          :class="['tab', selectedServiceId === s.id ? 'active' : '']"
+          :key="s.serviceId"
           @click="selectService(s)"
+          :class="[
+            'px-4 py-2 rounded-full text-sm font-semibold transition',
+            selectedServiceId === Number(s.serviceId)
+              ? 'bg-rose-500 text-white shadow'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          ]"
         >
           {{ s.serviceName }}
         </button>
+
       </div>
 
-      <!-- 🔥 SELECTORS -->
-      <div class="selectors">
+      <!-- SELECTORS -->
+      <div class="flex gap-3">
 
-        <!-- CHỌN TÒA -->
-        <select v-model="selectedBuildingId" @change="onBuildingChange">
+        <!-- BUILDING -->
+        <select
+          v-model="selectedBuildingId"
+          @change="onBuildingChange"
+          class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-rose-400"
+        >
           <option value="">Chọn tòa</option>
-          <option v-for="b in buildings" :key="b.id" :value="b.id">
+
+          <option
+            v-for="b in buildings"
+            :key="b.id"
+            :value="b.id"
+          >
             {{ b.buildingName }}
           </option>
         </select>
 
-        <!-- CHỌN THÁNG -->
-        <input type="month" v-model="selectedMonth" @change="loadData"/>
+        <!-- MONTH -->
+        <input
+          type="month"
+          v-model="selectedMonth"
+          @change="loadData"
+          class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-rose-400"
+        />
 
       </div>
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrapper">
-      <table>
-        <thead>
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+
+      <table class="w-full border-collapse">
+
+        <thead class="bg-gray-50">
           <tr>
-            <th>Phòng</th>
-            <th>Người thuê</th>
-            <th>Chỉ số cũ</th>
-            <th>Chỉ số mới</th>
-            <th>Tiêu thụ</th>
-            <th>Trạng thái</th>
+            <th class="text-left p-4">Phòng</th>
+            <th class="text-left p-4">Người thuê</th>
+            <th class="text-left p-4">Chỉ số cũ</th>
+            <th class="text-left p-4">Chỉ số mới</th>
+            <th class="text-left p-4">Tiêu thụ</th>
+            <th class="text-left p-4">Trạng thái</th>
           </tr>
         </thead>
 
-        <tbody>
-          <tr 
-            v-for="row in readings" 
-            :key="row.roomId"
-            class="border-b hover:bg-gray-50 transition"
+        <!-- FORCE RE-RENDER -->
+        <tbody :key="selectedServiceId">
+
+          <tr
+            v-for="row in readings"
+            :key="`${row.roomId}-${selectedServiceId}`"
+            class="border-t hover:bg-gray-50 transition"
           >
-            <td class="p-3 font-semibold text-gray-700">
+
+            <!-- ROOM -->
+            <td class="p-4 font-semibold text-gray-700">
               {{ row.roomName }}
             </td>
 
-            <td class="p-3 text-gray-500">
+            <!-- CUSTOMER -->
+            <td class="p-4 text-gray-500">
               {{ row.customerName }}
             </td>
 
-            <td class="p-3">
+            <!-- OLD -->
+            <td class="p-4">
               {{ format(row.oldValue) }}
             </td>
 
-            <td class="p-3">
+            <!-- NEW -->
+            <td class="p-4">
+
               <input
                 v-model.number="row.newValue"
                 type="number"
                 placeholder="Nhập"
                 :disabled="row.paid"
                 :class="[
-                  'w-24 px-2 py-1 rounded-lg border text-sm outline-none transition',
+                  'w-28 px-3 py-2 rounded-lg border text-sm outline-none transition',
                   row.paid
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'border-gray-300 focus:ring-2 focus:ring-rose-400'
                 ]"
               />
+
             </td>
 
-            <td class="p-3 font-bold text-gray-800">
+            <!-- USAGE -->
+            <td class="p-4 font-bold text-gray-800">
               {{ calcUsage(row) }}
             </td>
 
-            <td class="p-3">
-              <!-- Ưu tiên PAID -->
+            <!-- STATUS -->
+            <td class="p-4">
+
+              <!-- PAID -->
               <span
                 v-if="row.paid"
-                class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-600"
+                class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-600"
               >
                 Đã thanh toán
               </span>
 
+              <!-- NORMAL -->
               <span
                 v-else
                 :class="[
-                  'px-3 py-1 text-xs font-bold rounded-full',
+                  'px-3 py-1 rounded-full text-xs font-bold',
                   getStatus(row) === 'complete'
                     ? 'bg-green-100 text-green-600'
                     : getStatus(row) === 'missing'
@@ -125,10 +187,25 @@
                     : 'Sai dữ liệu'
                 }}
               </span>
+
+            </td>
+
+          </tr>
+
+          <!-- EMPTY -->
+          <tr v-if="readings.length === 0">
+            <td
+              colspan="6"
+              class="text-center py-10 text-gray-400"
+            >
+              Không có dữ liệu
             </td>
           </tr>
+
         </tbody>
+
       </table>
+
     </div>
 
   </div>
@@ -138,73 +215,122 @@
 import api from "@/api"
 
 export default {
+
   data() {
     return {
+
       selectedBuildingId: "",
-      selectedServiceId: "",
+      selectedServiceId: null,
       selectedMonth: "",
 
       buildings: [],
       services: [],
-      readings: []
+      readings: [],
+
+      // ✅ THÊM Ở ĐÂY
+      toast: {
+        show: false,
+        message: "",
+        type: "success"
+      }
+
     }
   },
-
   mounted() {
+
     const now = new Date()
+
     this.selectedMonth = now.toISOString().slice(0, 7)
 
     this.loadBuildings()
   },
 
   methods: {
+    showToast(message, type = "success") {
 
-    // LOAD BUILDINGS
+      this.toast.message = message
+      this.toast.type = type
+      this.toast.show = true
+
+      setTimeout(() => {
+        this.toast.show = false
+      }, 3000)
+    },
+    // ================= BUILDINGS =================
     async loadBuildings() {
+
       try {
+
         const res = await api.get("/buildings")
+
         this.buildings = res.data
+
       } catch (e) {
+
         console.error(e)
       }
     },
 
-    // CHANGE BUILDING
+    // ================= CHANGE BUILDING =================
     async onBuildingChange() {
-      this.selectedServiceId = ""
+
+      this.selectedServiceId = null
       this.services = []
       this.readings = []
 
       if (!this.selectedBuildingId) return
 
       try {
-        const res = await api.get(`/building-services/${this.selectedBuildingId}/meter`)
+
+        const res = await api.get(
+          `/building-services/${this.selectedBuildingId}/meter`
+        )
 
         this.services = res.data
 
+        console.log("SERVICES:", this.services)
+
+        // AUTO SELECT FIRST SERVICE
         if (this.services.length > 0) {
-          this.selectedServiceId = this.services[0].serviceId
-          console.log("Auto serviceId:", this.selectedServiceId)
-          this.loadData()
+
+          this.selectedServiceId = Number(
+            this.services[0].serviceId
+          )
+
+          await this.loadData()
         }
 
       } catch (e) {
+
         console.error(e)
       }
     },
 
-    // SELECT SERVICE
-    selectService(s) {
-      this.selectedServiceId = s.serviceId   // ✅ FIX
-      console.log("Selected serviceId:", this.selectedServiceId)
-      this.loadData()
+    // ================= SELECT SERVICE =================
+    async selectService(service) {
+
+      this.selectedServiceId = Number(service.serviceId)
+
+      console.log("SELECTED:", this.selectedServiceId)
+
+      this.readings = []
+
+      await this.loadData()
     },
 
-    // LOAD DATA
+    // ================= LOAD DATA =================
     async loadData() {
-      if (!this.selectedServiceId || !this.selectedMonth) return
+
+      if (
+        !this.selectedBuildingId ||
+        !this.selectedServiceId ||
+        !this.selectedMonth
+      ) {
+        return
+      }
 
       try {
+
         console.log("CALL API:", {
           month: this.selectedMonth,
           serviceId: this.selectedServiceId,
@@ -215,40 +341,86 @@ export default {
           params: {
             month: this.selectedMonth,
             serviceId: this.selectedServiceId,
-            buildingId: this.selectedBuildingId 
+            buildingId: this.selectedBuildingId
           }
         })
 
-        this.readings = res.data
+        console.log("READINGS:", res.data)
+
+        this.readings = [...res.data]
 
       } catch (e) {
+
         console.error("LOAD DATA ERROR:", e)
       }
     },
 
-    // FORMAT
+    // ================= FORMAT =================
     format(val) {
-      return val?.toLocaleString()
+
+      if (val == null) return "--"
+
+      return Number(val).toLocaleString()
     },
 
-    // USAGE
+    // ================= USAGE =================
     calcUsage(row) {
-      if (row.newValue == null || row.oldValue == null) return "--"
-      return (row.newValue - row.oldValue).toFixed(2)
+
+      if (
+        row.newValue == null ||
+        row.oldValue == null
+      ) {
+        return "--"
+      }
+
+      return (
+        row.newValue - row.oldValue
+      ).toFixed(2)
     },
 
-    // STATUS
+    // ================= STATUS =================
     getStatus(row) {
-      if (!row.newValue && row.newValue !== 0) return "missing"
-      if (row.newValue < row.oldValue) return "error"
+
+      if (row.newValue == null) {
+        return "missing"
+      }
+
+      if (row.newValue < row.oldValue) {
+        return "error"
+      }
+
       return "complete"
     },
 
-    // SAVE ALL
+    // ================= SAVE =================
     async saveAll() {
+
       try {
+
+        // ❌ CHECK SAI DỮ LIỆU
+        const invalid = this.readings.find(r =>
+          !r.paid &&
+          r.newValue != null &&
+          r.newValue < r.oldValue
+        )
+
+        if (invalid) {
+
+          this.showToast(
+            `Phòng ${invalid.roomName} có chỉ số mới nhỏ hơn chỉ số cũ`,
+            "error"
+          )
+
+          return
+        }
+
         const payload = this.readings
-          .filter(r => !r.paid) // 🔥 CHẶN PAID
+
+          .filter(r =>
+            !r.paid &&
+            r.newValue != null
+          )
+
           .map(r => ({
             roomId: r.roomId,
             serviceId: this.selectedServiceId,
@@ -257,145 +429,36 @@ export default {
           }))
 
         if (payload.length === 0) {
-          alert("Không có dữ liệu cần lưu")
+
+          this.showToast(
+            "Không có dữ liệu cần lưu",
+            "error"
+          )
+
           return
         }
 
-        await api.post("/meter-readings/bulk", payload)
+        await api.post(
+          "/meter-readings/bulk",
+          payload
+        )
 
-        alert("Lưu thành công!")
+        this.showToast("Lưu thành công!")
+
+        await this.loadData()
 
       } catch (e) {
+
         console.error(e)
-        alert("Lỗi khi lưu")
+
+        this.showToast(
+          "Lỗi khi lưu dữ liệu",
+          "error"
+        )
       }
     }
+
   }
+
 }
 </script>
-
-<style scoped>
-.utility-page {
-  padding: 20px;
-}
-
-/* HEADER */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header p {
-  color: #777;
-  font-size: 14px;
-}
-
-/* BUTTON */
-.btn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.primary {
-  background: #ff4d6d;
-  color: white;
-}
-
-.secondary {
-  background: #eee;
-}
-
-/* FILTER */
-.filters {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-}
-
-.tab {
-  padding: 6px 12px;
-  border-radius: 20px;
-  background: #f1f1f1;
-  cursor: pointer;
-}
-
-.tab.active {
-  background: #ff4d6d;
-  color: white;
-}
-
-.selectors select,
-.selectors input {
-  margin-left: 10px;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* TABLE */
-.table-wrapper {
-  background: white;
-  border-radius: 12px;
-  padding: 10px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th {
-  text-align: left;
-  padding: 10px;
-  background: #f9f9f9;
-}
-
-td {
-  padding: 10px;
-  border-top: 1px solid #eee;
-}
-
-/* INPUT */
-.input {
-  width: 100px;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* STATUS */
-.status {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-
-.complete {
-  background: #d4edda;
-  color: #28a745;
-}
-
-.missing {
-  background: #ffe5e5;
-  color: #dc3545;
-}
-
-.error {
-  background: #fff3cd;
-  color: #ff9800;
-}
-
-.usage {
-  font-weight: bold;
-}
-</style>

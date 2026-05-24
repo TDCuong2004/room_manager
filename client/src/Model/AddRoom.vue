@@ -277,20 +277,30 @@ export default {
       this.images.splice(index, 1)
     },
     handleImages(e){
-      const files = e.target.files
-      this.images = files
-      this.previewImages = []
 
-      for(let i=0;i<files.length;i++){
+      const files = Array.from(e.target.files)
+
+      files.forEach(file => {
+
+        // thêm vào danh sách cũ
+        this.images.push(file)
+
+        // preview
         const reader = new FileReader()
-        reader.onload = e => this.previewImages.push(e.target.result)
-        reader.readAsDataURL(files[i])
-      }
+
+        reader.onload = ev => {
+          this.previewImages.push(ev.target.result)
+        }
+
+        reader.readAsDataURL(file)
+      })
+
+      // reset input để chọn lại cùng ảnh vẫn trigger change
+      e.target.value = ""
     },
 
     async save(){
 
-      // ✅ VALIDATE
       if(!this.form.roomName){
         return this.showToast("Nhập tên phòng", "error")
       }

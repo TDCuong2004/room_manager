@@ -114,6 +114,19 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
+              <tr>
+                <td class="py-3 font-medium text-slate-700">
+                  Tiền phòng
+                </td>
+
+                <td class="py-3 text-center text-slate-500 font-semibold">
+                  {{ selectedInvoice.roomName }}
+                </td>
+
+                <td class="py-3 text-right font-bold text-slate-900">
+                  {{ formatMoney(selectedInvoice.rentPrice) }}
+                </td>
+              </tr>
               <tr v-for="d in details" :key="d.id">
                 <td class="py-3 font-medium text-slate-700">{{ d.serviceName }}</td>
                 <td class="py-3 text-center text-slate-500">{{ d.quantity }}</td>

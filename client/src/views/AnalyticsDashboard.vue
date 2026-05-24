@@ -1,276 +1,428 @@
 <template>
-  <div class="min-h-screen bg-[#f6f3f2] p-8 text-[#1f1f1f]">
+  <div class="min-h-screen bg-[#f5f5f7] p-5 text-[#111827]">
 
-    <!-- HEADER -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-black tracking-tight">
-        Occupancy & Efficiency Analytics
-      </h1>
+    <div class="max-w-[1400px] mx-auto">
 
-      <p class="text-sm text-gray-500 mt-2">
-        Phân tích chi tiết hiệu suất vận hành hệ thống phòng trọ.
-      </p>
-    </div>
-
-    <!-- FILTER -->
-    <!-- <div class="flex items-end gap-4 mb-8 flex-wrap">
-
-      <div>
-        <p class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-2">
-          Thời gian
-        </p>
-
-        <select
-          v-model="filter"
-          class="bg-white border border-gray-200 rounded-2xl px-5 py-3 min-w-[180px] text-sm font-medium outline-none"
-        >
-          <option value="month">
-            Tháng này
-          </option>
-
-          <option value="year">
-            Năm nay
-          </option>
-        </select>
-      </div>
-
-      <button
-        @click="loadData"
-        class="bg-black text-white px-7 py-3 rounded-2xl font-semibold hover:scale-[1.02] transition-all"
-      >
-        Áp dụng
-      </button>
-    </div> -->
-
-    <!-- STATS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-
-      <!-- EMPTY -->
-      <div
-        class="bg-white rounded-[28px] p-6 border border-gray-100 shadow-sm"
-      >
-        <p class="text-sm font-semibold text-gray-500">
-          Tổng Phòng Trống
-        </p>
-
-        <h2 class="text-5xl font-black mt-4">
-          {{ emptyRooms }}
-        </h2>
-
-        <p class="text-emerald-600 text-sm font-semibold mt-4">
-          Phòng đang chưa được thuê
-        </p>
-      </div>
-
-      <!-- RENTED -->
-      <div
-        class="bg-white rounded-[28px] p-6 border border-gray-100 shadow-sm"
-      >
-        <p class="text-sm font-semibold text-gray-500">
-          Tổng Phòng Đã Thuê
-        </p>
-
-        <h2 class="text-5xl font-black mt-4">
-          {{ rentedRooms }}
-        </h2>
-
-        <p class="text-emerald-600 text-sm font-semibold mt-4">
-          Tổng phòng đang hoạt động
-        </p>
-      </div>
-
-      <!-- OCCUPANCY -->
-      <div
-        class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-pink-700 via-rose-600 to-red-500 p-6 text-white shadow-xl"
-      >
-        <div
-          class="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10"
-        />
-
-        <p class="text-sm font-semibold opacity-90">
-          Hiệu Suất Lấp Đầy
-        </p>
-
-        <h2 class="text-5xl font-black mt-4">
-          {{ occupancyRate }}%
-        </h2>
-
-        <div class="mt-6">
-          <div class="h-2 bg-white/20 rounded-full overflow-hidden">
-            <div
-              class="h-full bg-white rounded-full"
-              :style="{ width: occupancyRate + '%' }"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BUILDINGS -->
-    <div class="bg-white rounded-[32px] p-8 border border-gray-100">
-
-      <div class="flex justify-between items-center mb-8">
+      <!-- HEADER -->
+      <div class="flex items-start justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-black">
-            Building Performance
-          </h2>
+          <h1 class="text-[34px] font-black leading-none">
+            Dashboard
+            <span class="text-rose-500">Phân tích</span>
+          </h1>
 
-          <p class="text-sm text-gray-500 mt-2">
-            Thống kê hiệu suất từng tòa nhà.
+          <p class="text-gray-500 mt-2 text-sm">
+            Hiệu suất vận hành và thống kê doanh thu hệ thống phòng trọ.
+          </p>
+        </div>
+
+        <div class="text-right">
+          <p class="uppercase tracking-[2px] text-[9px] text-gray-400 font-bold">
+            Cập nhật lần cuối
+          </p>
+
+          <p class="font-semibold mt-1 text-xs">
+            {{ currentTime }}
           </p>
         </div>
       </div>
 
-      <!-- HEADER -->
-      <div
-        class="hidden md:grid grid-cols-12 px-6 mb-4 text-[11px] uppercase tracking-widest text-gray-400 font-bold"
-      >
-        <div class="col-span-5">
-          Tòa nhà
+      <!-- TOP -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+
+        <!-- EMPTY -->
+        <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+          <p class="uppercase tracking-[2px] text-[10px] text-gray-400 font-bold">
+            Tổng phòng trống
+          </p>
+
+          <div class="flex items-end gap-2 mt-4">
+            <h2 class="text-5xl font-black leading-none">
+              {{ emptyRooms }}
+            </h2>
+
+            <span class="text-rose-500 text-lg mb-1">
+              Phòng
+            </span>
+          </div>
+
+          <p class="text-emerald-600 mt-4 text-xs font-medium">
+            ✓ Phòng đang chưa được thuê
+          </p>
         </div>
 
-        <div class="col-span-3">
-          Địa chỉ
+        <!-- RENTED -->
+        <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+          <p class="uppercase tracking-[2px] text-[10px] text-gray-400 font-bold">
+            Tổng phòng đã thuê
+          </p>
+
+          <div class="flex items-end gap-2 mt-4">
+            <h2 class="text-5xl font-black leading-none">
+              {{ rentedRooms }}
+            </h2>
+
+            <span class="text-rose-500 text-lg mb-1">
+              Phòng
+            </span>
+          </div>
+
+          <p class="text-rose-500 mt-4 text-xs font-medium">
+            Tổng phòng đang hoạt động
+          </p>
         </div>
 
-        <div class="col-span-2">
-          Thống kê
-        </div>
+        <!-- OCCUPANCY -->
+        <div
+          class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-600 via-rose-500 to-red-500 p-5 text-white shadow-lg"
+        >
 
-        <div class="col-span-2">
-          Hiệu suất
+          <div
+            class="absolute -right-10 -bottom-10 w-36 h-36 rounded-full bg-white/10"
+          />
+
+          <p class="uppercase tracking-[2px] text-[10px] font-bold opacity-80">
+            Hiệu suất lấp đầy
+          </p>
+
+          <h2 class="text-[58px] font-black leading-none mt-3">
+            {{ occupancyRate }}%
+          </h2>
+
+          <div class="mt-5">
+            <div class="h-2 bg-black/20 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-white rounded-full"
+                :style="{ width: occupancyRate + '%' }"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- ROW -->
-      <div
-        v-for="item in buildingStats"
-        :key="item.id"
-        class="bg-[#faf8f7] rounded-3xl p-5 mb-4 hover:bg-white border border-transparent hover:border-gray-200 transition-all"
-      >
-        <div class="grid md:grid-cols-12 gap-5 items-center">
+      <!-- BUILDING -->
+      <div>
 
-          <!-- INFO -->
-          <div class="md:col-span-5 flex items-center gap-4">
+        <div class="flex items-center gap-4 mb-5">
+          <h2 class="text-[30px] font-black whitespace-nowrap">
+            Hiệu suất từng tòa nhà
+          </h2>
 
-            <img
-              :src="item.image"
-              class="w-16 h-16 rounded-2xl object-cover"
-              @error="onImageError"
-            />
+          <div class="flex-1 h-[1px] bg-gray-300"></div>
+        </div>
 
-            <div>
-              <h3 class="font-black text-[15px]">
-                {{ item.name }}
-              </h3>
+        <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden">
 
-              <p class="text-xs text-gray-400 mt-1">
-                ID: {{ item.code }}
-              </p>
-            </div>
+          <!-- HEAD -->
+          <div
+            class="grid grid-cols-12 px-6 py-4 border-b border-gray-100 text-[9px] uppercase tracking-[2px] text-gray-400 font-bold"
+          >
+            <div class="col-span-4">Tòa nhà</div>
+            <div class="col-span-4">Địa chỉ</div>
+            <div class="col-span-2">Thống kê</div>
+            <div class="col-span-2">Hiệu suất</div>
           </div>
 
-          <!-- ADDRESS -->
-          <div class="md:col-span-3">
-            <p class="font-semibold text-sm">
-              {{ item.address }}
-            </p>
-          </div>
+          <!-- ROW -->
+          <div
+            v-for="item in buildingStats"
+            :key="item.id"
+            class="grid grid-cols-12 items-center px-6 py-5 border-b border-gray-50 hover:bg-[#fafafa]"
+          >
 
-          <!-- STATS -->
-          <div class="md:col-span-2 flex gap-6">
+            <div class="col-span-4 flex items-center gap-4">
 
-            <div>
-              <p class="text-[11px] uppercase text-gray-400 font-bold">
-                Thuê
-              </p>
+              <img
+                :src="item.image"
+                class="w-14 h-14 rounded-2xl object-cover"
+                @error="onImageError"
+              />
 
-              <p class="font-black text-lg mt-1">
-                {{ item.rented }}
+              <div>
+                <h3 class="font-black text-base">
+                  {{ item.name }}
+                </h3>
+
+                <p class="text-gray-400 text-xs mt-1">
+                  ID: {{ item.code }}
+                </p>
+              </div>
+
+            </div>
+
+            <div class="col-span-4">
+              <p class="text-gray-600 text-sm leading-relaxed">
+                {{ item.address }}
               </p>
             </div>
 
-            <div>
-              <p class="text-[11px] uppercase text-gray-400 font-bold">
-                Trống
-              </p>
+            <div class="col-span-2 flex gap-8">
 
-              <p class="font-black text-lg text-rose-500 mt-1">
-                {{ item.empty }}
-              </p>
+              <div>
+                <p class="uppercase text-[9px] tracking-[2px] text-gray-400 font-bold">
+                  Thuê
+                </p>
+
+                <p class="text-xl font-black mt-1">
+                  {{ item.rented }}
+                </p>
+              </div>
+
+              <div>
+                <p class="uppercase text-[9px] tracking-[2px] text-gray-400 font-bold">
+                  Trống
+                </p>
+
+                <p class="text-xl font-black text-rose-500 mt-1">
+                  {{ item.empty }}
+                </p>
+              </div>
+
             </div>
-          </div>
 
-          <!-- PERFORMANCE -->
-          <div class="md:col-span-2">
+            <div class="col-span-2">
 
-            <div class="flex justify-between mb-2">
-              <span class="font-black text-sm">
+              <span
+                :class="[
+                  'font-black text-base',
+                  item.performance >= 90
+                    ? 'text-emerald-500'
+                    : 'text-rose-500'
+                ]"
+              >
                 {{ item.performance }}%
               </span>
-            </div>
 
-            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                class="h-full rounded-full"
-                :class="{
-                  'bg-emerald-500': item.performance >= 90,
-                  'bg-rose-500': item.performance >= 70 && item.performance < 90,
-                  'bg-red-400': item.performance < 70
-                }"
-                :style="{ width: item.performance + '%' }"
-              />
+              <div class="h-2 bg-gray-100 rounded-full overflow-hidden mt-2">
+
+                <div
+                  class="h-full rounded-full"
+                  :class="[
+                    item.performance >= 90
+                      ? 'bg-emerald-500'
+                      : 'bg-rose-500'
+                  ]"
+                  :style="{ width: item.performance + '%' }"
+                />
+
+              </div>
+
             </div>
 
           </div>
 
         </div>
+
+      </div>
+
+      <!-- REVENUE -->
+      <div class="mb-8">
+
+        <div class="flex items-center gap-4 mb-5">
+          <h2 class="text-[30px] font-black whitespace-nowrap">
+            Thống kê doanh thu
+          </h2>
+
+          <div class="flex-1 h-[1px] bg-gray-300"></div>
+        </div>
+
+        <!-- FILTER -->
+        <div class="flex gap-4 flex-wrap mb-5">
+
+          <div>
+            <p class="uppercase text-[9px] tracking-[2px] text-gray-400 font-bold mb-2">
+              Chọn tòa nhà
+            </p>
+
+            <select
+              v-model="selectedBuilding"
+              class="bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-[200px] outline-none text-sm"
+            >
+              <option value="">
+                Tất cả tòa nhà
+              </option>
+
+              <option
+                v-for="b in buildings"
+                :key="b.id"
+                :value="b.id"
+              >
+                {{ b.buildingName }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <p class="uppercase text-[9px] tracking-[2px] text-gray-400 font-bold mb-2">
+              Chọn năm
+            </p>
+
+            <select
+              v-model="selectedYear"
+              class="bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-[110px] outline-none text-sm"
+            >
+              <option
+                v-for="year in years"
+                :key="year"
+                :value="year"
+              >
+                {{ year }}
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- CONTENT -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+          <!-- LEFT -->
+          <div class="space-y-4">
+
+            <div
+              class="rounded-2xl p-5 bg-gradient-to-br from-black via-[#111] to-[#1f1f1f] text-white"
+            >
+              <p class="uppercase tracking-[2px] text-[9px] text-gray-400 font-bold">
+                Tổng doanh thu
+              </p>
+
+              <h3 class="text-[30px] font-black mt-3">
+                {{ formatMoney(revenue.totalRevenue) }}đ
+              </h3>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-gray-100">
+              <div class="flex justify-between items-center">
+
+                <div>
+                  <p class="uppercase tracking-[2px] text-[9px] text-gray-400 font-bold">
+                    Tiền phòng
+                  </p>
+
+                  <h3 class="text-[30px] font-black mt-3">
+                    {{ formatMoney(revenue.rentRevenue) }}đ
+                  </h3>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-gray-100">
+              <div class="flex justify-between items-center">
+
+                <div>
+                  <p class="uppercase tracking-[2px] text-[9px] text-gray-400 font-bold">
+                    Dịch Vụ
+                  </p>
+
+                  <h3 class="text-[30px] font-black mt-3">
+                    {{ formatMoney(revenue.serviceRevenue) }}đ
+                  </h3>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CHART -->
+          <div class="xl:col-span-2 bg-white rounded-2xl p-5 border border-gray-100">
+
+            <div class="flex items-center justify-between mb-8">
+
+              <h3 class="text-xl font-black">
+                Biểu đồ doanh thu
+              </h3>
+
+            </div>
+
+            <!-- BAR -->
+            <div class="h-[220px] flex items-end justify-between gap-3">
+
+              <div
+                v-for="(item, i) in chartData"
+                :key="i"
+                class="flex flex-col items-center justify-end flex-1 h-full"
+              >
+
+                <div
+                  class="w-full max-w-[40px] rounded-t-xl bg-gradient-to-t from-rose-500 to-pink-300 transition-all duration-300 hover:opacity-80"
+                  :style="{
+                    height: item.value + '%',
+                    minHeight: item.realValue > 0 ? '12px' : '0px'
+                  }"
+                />
+
+                <p class="mt-2 text-[10px] text-gray-500 font-bold">
+                  {{ item.month }}
+                </p>
+
+                <p class="text-[9px] text-gray-400">
+                  {{ formatMoney(item.realValue) }}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
-
   </div>
 </template>
 
 <script setup>
-import axios from "axios"
 import { computed, onMounted, ref } from "vue"
 
-const API = "http://localhost:3000/api"
-
+import api from "@/api"
+const monthlyRevenue = ref([])
 const buildings = ref([])
 const rooms = ref([])
+const revenue = ref({
+  totalRevenue: 0,
+  rentRevenue: 0,
+  serviceRevenue: 0
+})
+const selectedBuilding = ref("")
+const currentYear = new Date().getFullYear()
 
-const loading = ref(false)
+const selectedYear = ref(currentYear)
 
-const filter = ref("month")
+const years = [
+  currentYear - 2,
+  currentYear - 1,
+  currentYear
+]
+const currentTime = new Date().toLocaleString("vi-VN", {
+  hour: "2-digit",
+  minute: "2-digit",
+  day: "numeric",
+  month: "long"
+})
 
 const loadData = async () => {
   try {
 
-    loading.value = true
-
-    const [buildingRes, roomRes] = await Promise.all([
-      axios.get(`${API}/buildings`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      }),
-
-      axios.get(`${API}/rooms/my`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      })
-    ])
+    const [buildingRes, roomRes, revenueRes, monthlyRevenueRes] =
+      await Promise.all([
+        api.get("/buildings"),
+        api.get("/rooms/my"),
+        api.get("/dashboard/revenue"),
+        api.get("/dashboard/monthly-revenue")
+      ])
 
     buildings.value = buildingRes.data
     rooms.value = roomRes.data
+    revenue.value = revenueRes.data
+    monthlyRevenue.value = monthlyRevenueRes.data
 
   } catch (err) {
     console.error(err)
-  } finally {
-    loading.value = false
   }
 }
 
@@ -278,12 +430,20 @@ onMounted(() => {
   loadData()
 })
 
+/* =========================
+   ROOM STATS
+========================= */
+
 const rentedRooms = computed(() => {
-  return rooms.value.filter(r => r.status === "RENTED").length
+  return rooms.value.filter(
+    r => r.status === "RENTED"
+  ).length
 })
 
 const emptyRooms = computed(() => {
-  return rooms.value.filter(r => r.status === "EMPTY").length
+  return rooms.value.filter(
+    r => r.status === "EMPTY"
+  ).length
 })
 
 const occupancyRate = computed(() => {
@@ -294,6 +454,10 @@ const occupancyRate = computed(() => {
     (rentedRooms.value / rooms.value.length) * 100
   )
 })
+
+/* =========================
+   BUILDING STATS
+========================= */
 
 const buildingStats = computed(() => {
 
@@ -318,17 +482,68 @@ const buildingStats = computed(() => {
     return {
       id: building.id,
       name: building.buildingName,
-      code: building.buildingCode || "N/A",
+      code: building.buildingCode || `B${building.id}`,
       address: building.address,
       rented,
       empty,
       performance,
 
       image:
+        building.imageUrl ||
         "https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=400"
     }
   })
 })
+
+/* =========================
+   REVENUE
+========================= */
+
+const filteredRooms = computed(() => {
+
+  if (!selectedBuilding.value) {
+    return rooms.value
+  }
+
+  return rooms.value.filter(
+    r => r.building?.id === selectedBuilding.value
+  )
+})
+
+const chartData = computed(() => {
+
+  const data = Array(12).fill(0)
+
+  monthlyRevenue.value.forEach(item => {
+
+    if (!item.month) return
+
+    const [year, month] = item.month.split("-")
+
+    if (Number(year) !== Number(selectedYear.value)) {
+      return
+    }
+
+    data[Number(month) - 1] = Number(item.revenue)
+  })
+
+  const max = Math.max(...data, 1)
+
+  return data.map((value, index) => ({
+    month: `T${index + 1}`,
+    realValue: value,
+
+    value:
+      value > 0
+        ? (value / max) * 100
+        : 4
+  }))
+})
+
+
+const formatMoney = (value) => {
+  return new Intl.NumberFormat("vi-VN").format(value || 0)
+}
 
 const onImageError = (e) => {
   e.target.src =

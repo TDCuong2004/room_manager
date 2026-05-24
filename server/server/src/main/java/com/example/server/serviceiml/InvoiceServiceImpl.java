@@ -76,6 +76,21 @@ public class InvoiceServiceImpl implements InvoiceService {
             invoice.setTotalAmount(BigDecimal.ZERO);
 
             invoiceRepository.save(invoice);
+            // ================= TIỀN PHÒNG =================
+
+            InvoiceDetailEntity rentDetail = new InvoiceDetailEntity();
+
+            rentDetail.setInvoice(invoice);
+
+            rentDetail.setServiceName("Tiền phòng");
+
+            rentDetail.setQuantity(BigDecimal.ONE);
+
+            rentDetail.setUnitPrice(contract.getRentPrice());
+
+            rentDetail.setAmount(contract.getRentPrice());
+
+            invoiceDetailRepository.save(rentDetail);
 
             double serviceTotal = 0;
 
@@ -146,6 +161,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                             inv.getRoom().getRoomName(),
                             inv.getMonth(),
                             inv.getTotalAmount(),
+                            inv.getContract().getRentPrice(),
                             inv.getStatus(),
                             user.getBankCode(),
                             user.getBankAccount()
