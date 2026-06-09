@@ -84,7 +84,119 @@
         </div>
 
       </div>
+      <div class="space-y-3 border-t pt-4">
+        <h3 class="font-semibold text-gray-700">
+          Thông tin CCCD
+        </h3>
 
+        <div>
+          <label class="text-sm font-medium text-gray-600">
+            Số CCCD
+          </label>
+          <input
+            v-model="user.cccdNumber"
+            class="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg"
+          />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-600">
+            Ngày sinh
+          </label>
+
+          <input
+            type="date"
+            v-model="user.dateOfBirth"
+            class="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+
+          <!-- Mặt trước -->
+          <div>
+            <p class="text-xs font-semibold text-gray-500 mb-2">
+              Mặt trước CCCD
+            </p>
+
+            <div class="relative">
+              <label
+                class="relative flex items-center justify-center h-36 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden"
+              >
+                <input
+                  type="file"
+                  class="hidden"
+                  accept="image/*"
+                  @change="uploadCCCD($event,'front')"
+                />
+
+                <img
+                  v-if="user.cccdFrontImage"
+                  :src="user.cccdFrontImage"
+                  class="absolute inset-0 w-full h-full object-cover"
+                />
+
+                <span
+                  v-else
+                  class="text-gray-400"
+                >
+                  📷 Tải ảnh
+                </span>
+              </label>
+
+              <button
+                v-if="user.cccdFrontImage"
+                type="button"
+                @click="removeCCCDImage('front')"
+                class="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white font-bold hover:bg-red-600"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Mặt sau -->
+          <div>
+            <p class="text-xs font-semibold text-gray-500 mb-2">
+              Mặt sau CCCD
+            </p>
+
+            <div class="relative">
+              <label
+                class="relative flex items-center justify-center h-36 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden"
+              >
+                <input
+                  type="file"
+                  class="hidden"
+                  accept="image/*"
+                  @change="uploadCCCD($event,'back')"
+                />
+
+                <img
+                  v-if="user.cccdBackImage"
+                  :src="user.cccdBackImage"
+                  class="absolute inset-0 w-full h-full object-cover"
+                />
+
+                <span
+                  v-else
+                  class="text-gray-400"
+                >
+                  📷 Tải ảnh
+                </span>
+              </label>
+
+              <button
+                v-if="user.cccdBackImage"
+                type="button"
+                @click="removeCCCDImage('back')"
+                class="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white font-bold hover:bg-red-600"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
       <!-- BUTTON -->
       <button
         @click="updateProfile"
@@ -112,15 +224,32 @@ const user = ref({
   phone: "",
   email: "",
   avatar: "",
+
   bankName: "",
   bankCode: "",
-  bankAccount: ""
+  bankAccount: "",
+
+  cccdNumber: "",
+  cccdFrontImage: "",
+  cccdBackImage: "",
+  cccdIssueDate: "",
+  cccdIssuePlace: "",
+  dateOfBirth: ""
 })
 
 const banks = ref([])
 const selectedBank = ref(null)
 const loading = ref(false)
 
+const convertDate = (dateStr) => {
+  if (!dateStr) return ""
+
+  const parts = dateStr.split("/")
+
+  if (parts.length !== 3) return ""
+
+  return `${parts[2]}-${parts[1]}-${parts[0]}`
+}
 // ================= BANK =================
 const fetchBanks = async () => {
   try {
@@ -173,6 +302,68 @@ const fetchProfile = async () => {
   }
 }
 
+const removeCCCDImage = (type) => {
+  if (type === "front") {
+    user.value.cccdFrontImage = ""
+
+    // xoá dữ liệu OCR
+    user.value.cccdNumber = ""
+    user.value.dateOfBirth = ""
+  } else {
+    user.value.cccdBackImage = ""
+  }
+}
+const uploadCCCD = async (event, type) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    // upload ảnh
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const uploadRes = await api.post("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+
+    if (type === "front") {
+      user.value.cccdFrontImage = uploadRes.data
+
+      // OCR
+      const ocrData = new FormData()
+      ocrData.append("file", file)
+
+      const ocrRes = await api.post("/ocr", ocrData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      })
+
+      const data = ocrRes.data
+
+      if (data.name)
+        user.value.fullName = data.name
+
+      if (data.id)
+        user.value.cccdNumber = data.id
+      if (data.dob)
+        user.value.dateOfBirth = convertDate(data.dob)
+      // if (data.issueDate)
+      //   user.value.cccdIssueDate = convertDate(data.issueDate)
+
+      // if (data.issuePlace)
+      //   user.value.cccdIssuePlace = data.issuePlace
+      toast.success("Đã quét CCCD")
+    } else {
+      user.value.cccdBackImage = uploadRes.data
+    }
+
+  } catch (err) {
+    toast.error("OCR thất bại")
+  }
+}
 // ================= UPDATE =================
 const updateProfile = async () => {
   try {

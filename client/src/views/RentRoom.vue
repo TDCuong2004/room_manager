@@ -358,7 +358,6 @@ const uploadFile = async (event, index, type) => {
 }
 
 const goPreview = () => {
-
   if (!form.value.startDate || !form.value.endDate) {
     showToast("Vui lòng nhập thời hạn hợp đồng", "error")
     return

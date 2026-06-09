@@ -5,6 +5,8 @@ import com.example.server.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -42,4 +44,23 @@ public class User {
 
     @Column(name = "bank_account")
     private String bankAccount;
+
+    // ===== CCCD =====
+
+    @Column(name = "cccd_number")
+    private String cccdNumber;
+
+    @Column(name = "cccd_front_image")
+    private String cccdFrontImage;
+
+    @Column(name = "cccd_back_image")
+    private String cccdBackImage;
+
+    @Column(name = "cccd_issue_date")
+    private LocalDate cccdIssueDate;
+
+    @Column(name = "cccd_issue_place")
+    private String cccdIssuePlace;
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
 }

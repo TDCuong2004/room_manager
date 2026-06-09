@@ -57,6 +57,11 @@ public class UserController {
         user.setBankName(req.getBankName());
         user.setBankCode(req.getBankCode());
         user.setBankAccount(req.getBankAccount());
+        // CCCD
+        user.setCccdNumber(req.getCccdNumber());
+        user.setCccdFrontImage(req.getCccdFrontImage());
+        user.setCccdBackImage(req.getCccdBackImage());
+        user.setDateOfBirth(req.getDateOfBirth());
         userRepository.save(user);
 
         return new UserProfileDTO(user);
