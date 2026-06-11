@@ -55,6 +55,9 @@ public class DashboardServiceImpl implements DashboardService {
     }
     @Override
     public List<MonthlyRevenueDTO> getMonthlyRevenue() {
-        return invoiceRepository.getMonthlyRevenue();
+
+        return invoiceRepository.getMonthlyRevenue(
+                InvoiceStatus.PAID
+        );
     }
 }

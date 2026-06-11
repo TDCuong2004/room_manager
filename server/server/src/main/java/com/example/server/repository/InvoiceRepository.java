@@ -25,8 +25,11 @@ SELECT new com.example.server.dto.MonthlyRevenueDTO(
     SUM(i.totalAmount)
 )
 FROM InvoiceEntity i
+WHERE i.status = :status
 GROUP BY i.month
 ORDER BY i.month
 """)
-    List<MonthlyRevenueDTO> getMonthlyRevenue();
+    List<MonthlyRevenueDTO> getMonthlyRevenue(
+            InvoiceStatus status
+    );
 }

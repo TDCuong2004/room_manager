@@ -1,6 +1,7 @@
 package com.example.server.serviceiml;
 
 import com.example.server.dto.DashboardDTO;
+import com.example.server.enums.InvoiceStatus;
 import com.example.server.enums.PostStatus;
 import com.example.server.enums.UserRole;
 import com.example.server.repository.*;
@@ -32,7 +33,11 @@ public class AdminServiceImpl implements AdminService {
         );
 
         // ================= REVENUE =================
-        dto.setMonthlyRevenue(invoiceRepository.getMonthlyRevenue());
+        dto.setMonthlyRevenue(
+                invoiceRepository.getMonthlyRevenue(
+                        InvoiceStatus.PAID
+                )
+        );
 
         return dto;
     }
