@@ -201,6 +201,74 @@
 
     </div>
   </div>
+  <div
+  v-if="showCheckoutModal"
+  class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
+>
+  <div class="bg-white w-[450px] rounded-3xl p-6 shadow-2xl">
+
+    <div class="text-center">
+
+      <div
+        class="w-16 h-16 mx-auto rounded-full bg-orange-100 flex items-center justify-center text-3xl"
+      >
+        ⚠️
+      </div>
+
+      <h3 class="text-xl font-bold mt-4">
+        Xác nhận trả phòng
+      </h3>
+
+      <p class="text-gray-500 mt-2">
+        Thao tác này sẽ kết thúc hợp đồng hiện tại.
+      </p>
+
+    </div>
+
+    <div class="mt-5 bg-gray-50 rounded-2xl p-4">
+
+      <div class="flex items-center gap-3 py-2">
+        <span class="text-green-500">✓</span>
+        <span>Hợp đồng → TERMINATED</span>
+      </div>
+
+      <div class="flex items-center gap-3 py-2">
+        <span class="text-green-500">✓</span>
+        <span>Khách thuê → INACTIVE</span>
+      </div>
+
+      <div class="flex items-center gap-3 py-2">
+        <span class="text-green-500">✓</span>
+        <span>Phòng → EMPTY</span>
+      </div>
+
+      <div class="flex items-center gap-3 py-2">
+        <span class="text-blue-500">ℹ</span>
+        <span>Giữ nguyên lịch sử hóa đơn</span>
+      </div>
+
+    </div>
+
+    <div class="flex gap-3 mt-6">
+
+      <button
+        @click="showCheckoutModal = false"
+        class="flex-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold"
+      >
+        Hủy
+      </button>
+
+      <button
+        @click="confirmCheckout"
+        class="flex-1 py-3 rounded-xl bg-rose-500 text-white hover:bg-rose-600 font-bold"
+      >
+        Xác nhận trả phòng
+      </button>
+
+    </div>
+
+  </div>
+</div>
 </template>
 
 <script>
@@ -214,6 +282,8 @@ export default {
 
   data(){
     return{
+      oldStatus: null,
+      showCheckoutModal: false,
       loading:false,
 
       form:{
@@ -239,6 +309,7 @@ export default {
   mounted() {
     if (this.room) {
       // set form
+      this.oldStatus = this.room.status
       this.form = {
         roomName: this.room.roomName,
         price: this.room.price,
@@ -299,6 +370,26 @@ export default {
       e.target.value = ""
     },
 
+    async confirmCheckout() {
+
+      this.showCheckoutModal = false
+
+      const formData = new FormData()
+
+      Object.keys(this.form).forEach(k => {
+        formData.append(k, this.form[k])
+      })
+
+      formData.append("buildingId", this.buildingId)
+
+      await api.put(`/rooms/${this.room.id}/checkout`)
+
+      this.showToast("Trả phòng thành công 🎉")
+
+      setTimeout(() => {
+        this.$emit("saved")
+      }, 800)
+    },
     async save(){
 
       if(!this.form.roomName){
@@ -328,9 +419,17 @@ export default {
           formData.append("images", this.images[i])
         }
 
-        if(this.room){
+        if (this.room) {
+
+          // RENTED -> EMPTY
+          if (
+            this.oldStatus === "RENTED" &&
+            this.form.status === "EMPTY"
+          ) {
+            this.showCheckoutModal = true
+            return
+          }
           await api.put(`/rooms/${this.room.id}`, formData)
-          this.showToast("Cập nhật thành công 🎉")
         }else{
           await api.post(`/rooms`, formData)
           this.showToast("Thêm phòng thành công 🎉")
@@ -357,6 +456,7 @@ export default {
     }
   }
 }
+
 </script>
 
 <style scoped>

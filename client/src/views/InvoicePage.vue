@@ -25,7 +25,7 @@
         >
 
         <button 
-          class="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-rose-200 disabled:shadow-none transition-all active:scale-95 flex items-center gap-2"
+          class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-rose-200 disabled:shadow-none transition-all active:scale-95 flex items-center gap-2"
           :disabled="!selectedBuilding || !selectedMonth"
           @click="generateInvoices"
         >
@@ -51,7 +51,7 @@
             <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 transition-colors">
               <td class="p-4 font-bold text-slate-700">{{ inv.roomName }}</td>
               <td class="p-4 text-slate-500 text-sm italic">{{ inv.month }}</td>
-              <td class="p-4 font-black text-rose-600">{{ formatMoney(inv.totalAmount) }} đ</td>
+              <td class="p-4 font-black text-blue-600">{{ formatMoney(inv.totalAmount) }} đ</td>
               <td class="p-4">
                 <select
                   v-model="inv.status"
@@ -127,17 +127,26 @@
                   {{ formatMoney(selectedInvoice.rentPrice) }}
                 </td>
               </tr>
-              <tr v-for="d in details" :key="d.id">
-                <td class="py-3 font-medium text-slate-700">{{ d.serviceName }}</td>
-                <td class="py-3 text-center text-slate-500">{{ d.quantity }}</td>
-                <td class="py-3 text-right font-bold text-slate-900">{{ formatMoney(d.amount) }}</td>
+              <tr
+                v-for="d in details.filter(item => item.serviceName !== 'Tiền phòng')"
+                :key="d.id"
+              >
+                <td class="py-3 font-medium text-slate-700">
+                  {{ d.serviceName }}
+                </td>
+                <td class="py-3 text-center text-slate-500">
+                  {{ d.quantity }}
+                </td>
+                <td class="py-3 text-right font-bold text-slate-900">
+                  {{ formatMoney(d.amount) }}
+                </td>
               </tr>
             </tbody>
           </table>
 
           <div class="pt-4 border-t-2 border-dashed border-slate-100 flex justify-between items-center">
             <span class="font-bold text-slate-500 uppercase text-xs">Tổng cộng</span>
-            <span class="text-2xl font-black text-rose-600">{{ formatMoney(selectedInvoice.totalAmount) }} đ</span>
+            <span class="text-2xl font-black text-blue-600">{{ formatMoney(selectedInvoice.totalAmount) }} đ</span>
           </div>
         </div>
 
@@ -158,7 +167,7 @@
 
         <div class="space-y-1 mb-8">
           <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">{{ selectedInvoice.roomName }} • THÁNG {{ selectedInvoice.month }}</p>
-          <p class="text-3xl font-black text-rose-600">{{ formatMoney(selectedInvoice.totalAmount) }} đ</p>
+          <p class="text-3xl font-black text-blue-600">{{ formatMoney(selectedInvoice.totalAmount) }} đ</p>
           <div class="mt-4 p-3 bg-rose-50 rounded-xl inline-block">
             <p class="text-[10px] text-rose-400 font-black uppercase mb-1">Nội dung chuyển khoản</p>
             <p class="text-sm font-bold text-rose-700 uppercase tracking-tighter">PHONG_{{ selectedInvoice.roomName }}_T{{ selectedInvoice.month }}</p>
@@ -310,7 +319,13 @@ export default {
         this.fetchInvoices()
       } catch (err) {
         console.error(err)
-        this.toast.error("Lỗi khi tính tiền")
+
+        const message =
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Lỗi khi tính tiền"
+
+        this.toast.error(message)
       }
     },
     handleStatusChange(inv) {
@@ -363,7 +378,7 @@ export default {
       this.selectedInvoice = inv
 
       if (!inv.bankCode || !inv.bankAccount) {
-        toast.error("Chưa cấu hình ngân hàng 😢")
+        this.toast.error("Chưa cấu hình ngân hàng 😢")
         return
       }
 

@@ -25,15 +25,10 @@
       </div>
 
       <div class="flex gap-3">
-        <button
-          class="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 transition"
-        >
-          Export
-        </button>
 
         <button
           @click="saveAll"
-          class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white transition"
+          class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition"
         >
           Save All
         </button>
@@ -53,7 +48,7 @@
           :class="[
             'px-4 py-2 rounded-full text-sm font-semibold transition',
             selectedServiceId === Number(s.serviceId)
-              ? 'bg-rose-500 text-white shadow'
+              ? 'bg-blue-600 text-white shadow'
               : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
           ]"
         >
@@ -69,7 +64,7 @@
         <select
           v-model="selectedBuildingId"
           @change="onBuildingChange"
-          class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-rose-400"
+          class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Chọn tòa</option>
 
@@ -87,7 +82,7 @@
           type="month"
           v-model="selectedMonth"
           @change="loadData"
-          class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-rose-400"
+          class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
         />
 
       </div>
@@ -145,7 +140,7 @@
                   'w-28 px-3 py-2 rounded-lg border text-sm outline-none transition',
                   row.paid
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-300 focus:ring-2 focus:ring-rose-400'
+                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500'
                 ]"
               />
 

@@ -4,7 +4,7 @@
     <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
 
       <!-- TITLE -->
-      <h1 class="text-2xl font-bold text-center text-rose-500 mb-2">
+      <h1 class="text-2xl font-bold text-center text-blue-600 mb-2">
         Đổi mật khẩu
       </h1>
 
@@ -77,7 +77,7 @@
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50"
+          class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50"
         >
           {{ loading ? "Đang xử lý..." : "Đổi mật khẩu" }}
         </button>

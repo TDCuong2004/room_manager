@@ -9,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "axios": "^1.13.5",
     "docx": "^9.6.1",
     "file-saver": "^2.0.5",
+    "primeicons": "^7.0.0",
     "vue": "^3.5.25",
     "vue-router": "^4.6.4",
     "vue-toastification": "^2.0.0-rc.5"

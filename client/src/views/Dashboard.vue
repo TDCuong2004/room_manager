@@ -97,7 +97,7 @@ import InvoicePage from "@/views/InvoicePage.vue"
 import UtilityReadings from "@/views/UtilityReadings.vue"
 import PostManager from "@/views/PostManager.vue"
 import AnalyticsDashboard from "@/views/AnalyticsDashboard.vue"
-
+import "primeicons/primeicons.css"
 const currentView = ref("buildings")
 const buildingId = ref(null)
 

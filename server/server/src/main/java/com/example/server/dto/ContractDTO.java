@@ -15,8 +15,9 @@ public class ContractDTO {
     private LocalDate endDate;
     private LocalDate startDate;
     private List<String> customers;
-
+    private String representativeName;
     public ContractDTO(Contract c) {
+
         this.id = c.getId();
         this.roomName = c.getRoom().getRoomName();
         this.startDate = c.getStartDate();
@@ -24,8 +25,14 @@ public class ContractDTO {
 
         this.customers = c.getContractCustomers()
                 .stream()
-                .filter(ContractCustomer::isRepresentative)
                 .map(cc -> cc.getCustomer().getFullName())
                 .toList();
+
+        this.representativeName = c.getContractCustomers()
+                .stream()
+                .filter(ContractCustomer::isRepresentative)
+                .map(cc -> cc.getCustomer().getFullName())
+                .findFirst()
+                .orElse("");
     }
 }

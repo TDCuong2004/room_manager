@@ -50,10 +50,10 @@
             >
               🔔
               <span 
-                v-if="expiringContracts.length"
-                class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full"
+                v-if="unreadCount"
+                class="absolute -top-1 -right-1 bg-[#4CAF50] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full"
               >
-                {{ expiringContracts.length }}
+                {{ unreadCount }}
               </span>
             </div>
 
@@ -65,20 +65,46 @@
                 Không có thông báo
               </div>
 
-              <div 
+              <div
                 v-for="c in expiringContracts"
                 :key="c.id"
-                class="p-2 rounded-lg hover:bg-gray-50"
+                class="mb-3 p-3 rounded-xl border border-rose-100 bg-white shadow-sm"
               >
-                <p class="text-sm">
-                  Phòng <b>{{ c.roomName }}</b> sắp hết hạn
-                </p>
+                <div class="flex items-center justify-between mb-2">
+                  <p class="font-semibold text-gray-800">
+                    🏠 Phòng {{ c.roomName }}
+                  </p>
 
-                <button 
+                  <span
+                    class="px-2 py-1 text-xs bg-rose-50 text-rose-500 rounded-full"
+                  >
+                    Sắp hết hạn
+                  </span>
+                </div>
+
+                <!-- Người thuê -->
+                <div class="flex items-center gap-2 text-sm mb-2">
+                  <span>👤</span>
+                  <span class="text-gray-500">Người thuê:</span>
+                  <span class="font-medium">
+                    {{ c.representativeName }}
+                  </span>
+                </div>
+
+                <!-- Ngày hết hạn -->
+                <div class="flex items-center gap-2 text-sm mb-3">
+                  <span>📅</span>
+                  <span class="text-gray-500">Hết hạn:</span>
+                  <span class="font-medium text-green-600">
+                    {{ formatDate(c.endDate) }}
+                  </span>
+                </div>
+
+                <button
                   @click="openRenew(c)"
-                  class="mt-2 text-xs px-3 py-1 bg-rose-500 text-white rounded-md"
+                  class="w-full py-2 bg-[#4CAF50] hover:bg-[#43A047] text-white rounded-lg text-sm font-medium transition"
                 >
-                  Gia hạn
+                  Gia hạn ngay
                 </button>
               </div>
             </div>
@@ -169,13 +195,101 @@
 
           <button 
             @click="logout"
-            class="flex-1 py-2 bg-rose-500 text-white hover:bg-rose-600 rounded-lg"
+            class="flex-1 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-lg"
           >
             Đăng xuất
           </button>
         </div>
       </div>
     </div>
+    <!-- RENEW CONTRACT MODAL -->
+      <div
+        v-if="showRenewModal"
+        class="fixed inset-0 z-[9999] flex items-center justify-center"
+      >
+        <!-- overlay -->
+        <div
+          class="absolute inset-0 bg-black/50"
+          @click="showRenewModal = false"
+        ></div>
+
+        <!-- modal -->
+        <div class="relative z-10 bg-white rounded-2xl shadow-xl w-[500px] p-6">
+
+          <h3 class="text-xl font-bold text-gray-800 mb-5">
+            Gia hạn hợp đồng
+          </h3>
+
+          <!-- Thông tin hiện tại -->
+          <div class="bg-gray-50 border rounded-xl p-4 mb-5">
+
+            <div class="flex justify-between mb-3">
+              <span class="text-gray-500">Phòng</span>
+              <span class="font-semibold">
+                {{ selectedContract?.roomName }}
+              </span>
+            </div>
+
+            <div class="flex justify-between mb-3">
+              <span class="text-gray-500">Người thuê</span>
+              <span class="font-semibold">
+                {{ selectedContract?.representativeName }}
+              </span>
+            </div>
+
+            <div class="flex justify-between mb-3">
+              <span class="text-gray-500">Ngày bắt đầu</span>
+              <span class="font-medium">
+                {{ formatDate(selectedContract?.startDate) }}
+              </span>
+            </div>
+
+            <div class="flex justify-between">
+              <span class="text-gray-500">Ngày hết hạn hiện tại</span>
+              <span class="font-semibold text-red-500">
+                {{ formatDate(selectedContract?.endDate) }}
+              </span>
+            </div>
+
+          </div>
+
+          <!-- Chọn ngày mới -->
+          <div>
+            <label class="block text-sm font-medium mb-2">
+              Ngày kết thúc mới
+            </label>
+
+            <input
+              v-model="renewEndDate"
+              type="date"
+              :min="selectedContract?.endDate"
+              class="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+
+            <p class="text-xs text-gray-500 mt-2">
+              Ngày mới phải lớn hơn ngày hết hạn hiện tại.
+            </p>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-6">
+
+            <button
+              @click="showRenewModal = false"
+              class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              Hủy
+            </button>
+
+            <button
+              @click="confirmRenew"
+              class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 transition"
+            >
+              Gia hạn
+            </button>
+
+          </div>
+        </div>
+      </div>
   </header>
 </template>
 
@@ -183,13 +297,28 @@
 import { ref, onMounted, onBeforeUnmount } from "vue"
 import { useRouter } from "vue-router"
 import api from "@/api"
+import { useToast } from "vue-toastification"
+import { computed } from "vue"
+
+const unreadCount = computed(() =>
+  expiringContracts.value.filter(
+    c => !viewedContracts.value.includes(c.id)
+  ).length
+)
+const toast = useToast()
+const showRenewModal = ref(false)
+const selectedContract = ref(null)
+const renewEndDate = ref("")
+
 const showLogoutModal = ref(false)
 const router = useRouter()
 
 const isLoggedIn = ref(false)
 const showDropdown = ref(false)
 const showNotify = ref(false)
-
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("vi-VN")
+}
 const user = ref({})
 const expiringContracts = ref([])
 
@@ -247,13 +376,72 @@ const logout = () => {
 
   router.push("/")
 }
+
 // ================= DATA =================
 const loadExpiring = async () => {
   if (!isLoggedIn.value) return
   const res = await api.get("/contracts/expiring-soon")
   expiringContracts.value = res.data
 }
+// Gia Hạn
+const openRenew = (contract) => {
 
+  markAsViewed(contract.id)
+
+  selectedContract.value = contract
+
+  // không điền sẵn
+  renewEndDate.value = ""
+
+  showRenewModal.value = true
+}
+
+const viewedContracts = ref(
+  JSON.parse(localStorage.getItem("viewedContracts") || "[]")
+)
+const markAsViewed = (id) => {
+  if (!viewedContracts.value.includes(id)) {
+    viewedContracts.value.push(id)
+
+    localStorage.setItem(
+      "viewedContracts",
+      JSON.stringify(viewedContracts.value)
+    )
+  }
+}
+const confirmRenew = async () => {
+  if (!renewEndDate.value) {
+    toast.warning("Vui lòng chọn ngày kết thúc")
+    return
+  }
+
+  try {
+    await api.post(
+      `/contracts/${selectedContract.value.id}/renew`,
+      null,
+      {
+        params: {
+          endDate: renewEndDate.value
+        }
+      }
+    )
+
+    toast.success("Gia hạn hợp đồng thành công")
+
+
+    showRenewModal.value = false
+
+    await loadExpiring()
+
+  } catch (err) {
+    console.error(err)
+
+    toast.error(
+      err?.response?.data?.error ||
+      "Gia hạn hợp đồng thất bại"
+    )
+  }
+}
 const handleUserUpdated = () => {
   checkLogin()
 
@@ -278,6 +466,7 @@ onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside)
   window.removeEventListener("userUpdated", handleUserUpdated)
 })
+
 </script>
 
 <style>

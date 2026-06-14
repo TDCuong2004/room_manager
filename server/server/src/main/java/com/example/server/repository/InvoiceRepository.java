@@ -18,7 +18,6 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Long> {
             Long roomId,
             InvoiceStatus status
     );
-
     @Query("""
 SELECT new com.example.server.dto.MonthlyRevenueDTO(
     i.month,
@@ -29,7 +28,26 @@ WHERE i.status = :status
 GROUP BY i.month
 ORDER BY i.month
 """)
-    List<MonthlyRevenueDTO> getMonthlyRevenue(
+    List<MonthlyRevenueDTO> getMonthlyRevenueForAdmin(
             InvoiceStatus status
+    );
+
+    @Query("""
+SELECT new com.example.server.dto.MonthlyRevenueDTO(
+    i.month,
+    SUM(i.totalAmount)
+)
+FROM InvoiceEntity i
+JOIN i.room r
+JOIN r.building b
+JOIN b.user u
+WHERE i.status = :status
+AND u.username = :username
+GROUP BY i.month
+ORDER BY i.month
+""")
+    List<MonthlyRevenueDTO> getMonthlyRevenue(
+            InvoiceStatus status,
+            String username
     );
 }

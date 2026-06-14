@@ -17,10 +17,11 @@
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-black text-gray-500 uppercase tracking-wider ml-1">Giá tối đa</label>
         <div class="relative">
-          <input 
-            v-model="search.maxPrice" 
-            type="number" 
-            placeholder="VNĐ" 
+          <input
+            :value="formattedPrice"
+            @input="handlePriceInput"
+            type="text"
+            placeholder="VD: 3.000.000"
             class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm pr-12"
           />
           <span class="absolute right-4 top-3.5 text-gray-400 text-xs font-bold">VNĐ</span>
@@ -58,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 import api from '@/api' 
 
@@ -69,7 +70,6 @@ const search = ref({
   maxPrice: null,
   area: null
 })
-
 const handleSearch = async () => {
   try {
     const res = await api.post('/posts/search', search.value)
@@ -83,7 +83,20 @@ const handleSearch = async () => {
   }
 }
 
+const formattedPrice = computed(() => {
+  if (!search.value.maxPrice) return ''
 
+  return Number(search.value.maxPrice)
+    .toLocaleString('vi-VN')
+})
+
+const handlePriceInput = (e) => {
+  const raw = e.target.value.replace(/\D/g, '')
+
+  search.value.maxPrice = raw
+    ? Number(raw)
+    : null
+}
 const resetSearch = async () => {
   search.value = { location: '', maxPrice: null, area: null }
 

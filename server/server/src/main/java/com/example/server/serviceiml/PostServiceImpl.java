@@ -117,6 +117,7 @@ public class PostServiceImpl implements PostService {
         dto.setContent(p.getContent());
         dto.setAddress(p.getAddress());
         dto.setPrice(p.getPrice());
+        dto.setArea(p.getArea());
         dto.setCreatedAt(p.getCreatedAt());
 
         // USER

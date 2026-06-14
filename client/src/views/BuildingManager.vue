@@ -1,64 +1,113 @@
 <template>
-  <div class="building-manager">
+  <div class="min-h-screen bg-[#f7f7f8] p-8">
 
-    <!-- HEADER -->
-    <div class="building-header">
-      <h2>🏢 Tòa nhà của tôi</h2>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">
+          🏢 Tòa nhà của tôi
+        </h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Quản lý danh sách bất động sản và dịch vụ đi kèm.
+        </p>
+      </div>
 
-      <button class="primary-btn" @click="openAdd">
+      <button
+        @click="openAdd"
+        class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+      >
         + Thêm tòa nhà
       </button>
     </div>
 
-    <!-- LIST -->
-    <div v-if="buildings.length > 0" class="building-grid">
+    <!-- Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
+      <!-- Card -->
       <div
         v-for="b in buildings"
         :key="b.id"
-        class="building-card"
+        class="bg-white rounded-3xl p-5 shadow-sm hover:shadow-lg transition cursor-pointer relative"
       >
+        <!-- Badge -->
+        <span
+          class="absolute top-4 right-4 text-[10px] px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold"
+        >
+          HOẠT ĐỘNG
+        </span>
 
-        <!-- CLICK CARD → ROOMS -->
-        <div class="building-info" @click="goToRooms(b.id)">
-          <h3>{{ b.buildingName }}</h3>
-          <p class="address">{{ b.address }}</p>
+        <!-- Icon -->
+        <div
+          class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center mb-5"
+        >
+          <BuildingOffice2Icon class="w-6 h-6 text-rose-500" />
         </div>
 
-        <div class="actions">
+        <!-- Info -->
+        <div @click="goToRooms(b.id)">
+          <h3 class="font-bold text-xl text-gray-800">
+            {{ b.buildingName }}
+          </h3>
+
+          <p class="flex items-start gap-1 text-gray-500 text-sm mt-2">
+            <MapPinIcon class="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>{{ b.address }}</span>
+          </p>
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-5 grid grid-cols-2 gap-2">
 
           <button
-            class="edit-btn"
             @click.stop="openEdit(b)"
+            class="flex items-center justify-center gap-1 py-2 rounded-lg bg-indigo-50 text-indigo-600 text-sm hover:bg-indigo-100"
           >
-            Sửa
+            <PencilSquareIcon class="w-4 h-4" />
+            <span>Sửa</span>
           </button>
 
           <button
-            class="delete-btn"
             @click.stop="confirmDelete(b.id)"
+            class="flex items-center justify-center gap-1 py-2 rounded-lg bg-red-50 text-red-500 text-sm hover:bg-red-100"
           >
-            Xóa
-          </button>
-
-          <button
-            class="service-btn"
-            @click.stop="goToServices(b.id)"
-          >
-            Dịch vụ tòa
+            <TrashIcon class="w-4 h-4" />
+            <span>Xóa</span>
           </button>
 
         </div>
 
+        <button
+          @click.stop="goToServices(b.id)"
+          class="mt-3 w-full py-2 rounded-lg bg-emerald-100 text-emerald-700 text-sm font-medium hover:bg-emerald-200"
+        >
+          ⚡ Dịch vụ tòa
+        </button>
+
+      </div>
+
+      <!-- Add New -->
+      <div
+        @click="openAdd"
+        class="border-2 border-dashed border-rose-200 rounded-3xl flex flex-col items-center justify-center min-h-[290px] cursor-pointer hover:bg-rose-50 transition"
+      >
+        <div
+          class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-2xl text-gray-500"
+        >
+          ➕
+        </div>
+
+        <p class="mt-5 font-semibold text-gray-700">
+          Thêm địa điểm mới
+        </p>
+
+        <p class="text-sm text-gray-400 mt-2 text-center px-4">
+          Mở rộng danh mục quản lý của bạn
+        </p>
       </div>
 
     </div>
 
-    <div v-else class="empty-state">
-      Bạn chưa có tòa nhà nào.
-    </div>
-
-    <!-- MODAL ADD -->
+    <!-- Modal -->
     <AddBuilding
       v-if="showAdd"
       @close="showAdd = false"
@@ -67,11 +116,16 @@
 
   </div>
 </template>
-
 <script>
 import axios from "axios"
 import AddBuilding from "@/Model/AddBuilding.vue"
-
+import {
+  BuildingOffice2Icon,
+  MapPinIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  PlusIcon,
+} from "@heroicons/vue/24/outline";
 const api = axios.create({
   baseURL: "http://localhost:3000/api"
 })
@@ -90,7 +144,12 @@ api.interceptors.request.use(config => {
 export default {
 
   components:{
-    AddBuilding
+    AddBuilding,
+    BuildingOffice2Icon,
+    MapPinIcon,
+    PencilSquareIcon,
+    TrashIcon,
+    PlusIcon,
   },
 
   data() {
@@ -178,132 +237,4 @@ export default {
 </script>
 <style scoped>
 
-/* ===== BUILDING MANAGER LAYOUT ===== */
-.building-manager {
-  padding: 40px;
-  background: #f4f6f9;
-  min-height: 100vh;
-}
-
-/* ===== HEADER ===== */
-.building-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-}
-
-.building-header h2 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-/* ===== PRIMARY BUTTON ===== */
-.primary-btn {
-  background: linear-gradient(135deg, #ff385c, #ff7a18);
-  border: none;
-  color: white;
-  padding: 12px 22px;
-  border-radius: 30px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 14px;
-  transition: 0.25s ease;
-}
-
-.primary-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(255, 122, 24, 0.35);
-}
-
-/* ===== GRID ===== */
-.building-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-}
-
-/* ===== CARD ===== */
-.building-card {
-  background: white;
-  padding: 24px;
-  border-radius: 20px;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
-  transition: 0.25s ease;
-}
-
-.building-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.1);
-}
-
-.building-card h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.address {
-  font-size: 14px;
-  color: #6b7280;
-  margin-top: 8px;
-}
-
-/* ===== ACTION BUTTONS ===== */
-.actions {
-  margin-top: 18px;
-  display: flex;
-  gap: 10px;
-}
-
-.edit-btn {
-  background: #3b82f6;
-  border: none;
-  color: white;
-  padding: 7px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.edit-btn:hover {
-  background: #2563eb;
-}
-
-.delete-btn {
-  background: #ef4444;
-  border: none;
-  color: white;
-  padding: 7px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.delete-btn:hover {
-  background: #dc2626;
-}
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-  text-align: center;
-  margin-top: 60px;
-  font-size: 15px;
-  color: #9ca3af;
-}
-.service-btn {
-  background: #10b981; /* xanh lá */
-  border: none;
-  color: white;
-  padding: 7px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.service-btn:hover {
-  background: #059669;
-}
 </style>

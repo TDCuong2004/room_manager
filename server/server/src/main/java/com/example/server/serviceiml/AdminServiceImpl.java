@@ -34,7 +34,7 @@ public class AdminServiceImpl implements AdminService {
 
         // ================= REVENUE =================
         dto.setMonthlyRevenue(
-                invoiceRepository.getMonthlyRevenue(
+                invoiceRepository.getMonthlyRevenueForAdmin(
                         InvoiceStatus.PAID
                 )
         );

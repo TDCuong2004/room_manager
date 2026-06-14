@@ -13,6 +13,7 @@ public class PostResponse {
     private String content;
     private String address;
     private Double price;
+    private Double area;
     private LocalDateTime createdAt;
 
     private String userName;

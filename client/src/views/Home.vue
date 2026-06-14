@@ -37,25 +37,64 @@
         </div>
         
         <div class="px-4 py-4 space-y-3">
-          <div v-if="post.phone" class="text-blue-600 font-bold text-sm flex items-center gap-1.5">
-            <span class="bg-blue-100 p-1 rounded-md text-[10px]">📞</span> {{ post.phone }}
-          </div>
-          
           <h3 class="font-bold text-lg text-gray-900 leading-snug">{{ post.title }}</h3>
           <p class="text-gray-700 leading-relaxed text-[15px] whitespace-pre-wrap">{{ post.content }}</p>
 
-          <div class="flex flex-wrap items-center gap-3">
-            <button 
-              v-if="post.address" 
+          <!-- Địa chỉ -->
+          <div v-if="post.address" class="mt-3">
+            <button
               @click="openGoogleMaps(post.address)"
-              class="text-sm text-gray-600 flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 transition-all bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 group"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-blue-600 transition"
             >
-              <span class="group-hover:scale-110 transition-transform text-lg leading-none">📍</span>
-              <span class="font-medium">{{ post.address }}</span>
+              <span>📍</span>
+              <span class="text-sm font-medium">
+                {{ post.address }}
+              </span>
             </button>
+          </div>
 
-            <div v-if="post.room" class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-xl text-sm font-bold border border-green-100">
-              🏠 {{ post.room.roomName }} <span class="text-green-200">|</span> {{ formatMoney(post.room.price) }}đ
+          <!-- SĐT -->
+          <div
+            v-if="post.phone"
+            class="mt-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-700"
+          >
+            <span>📞</span>
+            <span class="text-sm font-semibold">
+              {{ post.phone }}
+            </span>
+          </div>
+
+          <!-- Thông tin phòng -->
+          <div
+            v-if="post.room"
+            class="flex flex-wrap gap-2 mt-3"
+          >
+            <div
+              class="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-50 border border-green-100 text-green-700"
+            >
+              🏠
+              <span class="text-sm font-semibold">
+                {{ post.room.roomName }}
+              </span>
+            </div>
+
+            <div
+              class="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 text-amber-700"
+            >
+              💰
+              <span class="text-sm font-semibold">
+                {{ formatMoney(post.room.price) }}đ
+              </span>
+            </div>
+
+            <div
+              v-if="post.room.area"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 border border-purple-100 text-purple-700"
+            >
+              📐
+              <span class="text-sm font-semibold">
+                {{ post.room.area }} m²
+              </span>
             </div>
           </div>
         </div>

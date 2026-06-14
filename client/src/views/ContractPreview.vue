@@ -57,7 +57,7 @@
 
               <p>
                 CCCD số :
-                ....................................
+                {{ userLoggedIn?.cccdNumber || '....................................' }}
 
                 <span class="ml-6">
                   Cấp ngày .../.../....
@@ -91,7 +91,7 @@
         <p class="italic mb-4">Hai bên cùng thỏa thuận và thống nhất ký kết hợp đồng với các nội dung sau:</p>
 
         <h4 class="font-bold uppercase mt-6 mb-1 underline italic text-sm">ĐIỀU 1: ĐỐI TƯỢNG CỦA HỢP ĐỒNG</h4>
-        <p>Bên A đồng ý cho bên B thuê phòng <span class="font-bold underline text-blue-700">{{ room.roomName }}</span> tại ngôi nhà: số 21 ngách 11 ngõ 298 Đê La Thành nhỏ, Phường Văn Miếu Quốc Tử Giám.</p>
+        <p>Bên A đồng ý cho bên B thuê phòng <span class="font-bold underline text-blue-700">{{ room.roomName }}</span> tại ngôi nhà: {{ room?.building?.address }}.</p>
         <p>Thời hạn thuê phòng là <span class="font-bold">...</span> tháng kể từ ngày {{ form.startDate }} đến ngày {{ form.endDate }}.</p>
         <p>Mục đích thuê để lưu trú với số lượng người là: <span class="font-bold">{{ form.customers.length }}</span> người.</p>
 
@@ -303,6 +303,8 @@ onMounted(() => {
 
     room.value = data.room
     form.value = data.form
+
+    console.log(room.value)
 
     // FIX
     services.value = data.room.services || []

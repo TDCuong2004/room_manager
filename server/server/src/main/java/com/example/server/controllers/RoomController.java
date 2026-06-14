@@ -6,6 +6,7 @@ import com.example.server.entity.Rooms;
 import com.example.server.enums.RoomStatus;
 import com.example.server.services.RoomService;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -83,8 +84,6 @@ public class RoomController {
             @RequestParam String description,
             @RequestParam Long buildingId,
             @RequestParam(required = false) List<MultipartFile> images,
-
-            // 🔥 THÊM CÁI NÀY
             @RequestParam(required = false) List<String> keepImages
     ) {
 
@@ -117,5 +116,13 @@ public class RoomController {
     @GetMapping("/my")
     public List<Rooms> getMyRooms(Principal principal) {
         return roomService.getAllByUser(principal.getName());
+    }
+    @PutMapping("/{id}/checkout")
+    public ResponseEntity<?> checkoutRoom(
+            @PathVariable Long id
+    ) {
+        roomService.checkoutRoom(id);
+
+        return ResponseEntity.ok().build();
     }
 }

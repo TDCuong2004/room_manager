@@ -27,4 +27,6 @@ public interface RoomService {
             List<MultipartFile> images,
             List<String> keepImages
     );
+
+    void checkoutRoom(Long roomId);
 }

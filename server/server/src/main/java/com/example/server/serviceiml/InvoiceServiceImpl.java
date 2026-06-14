@@ -103,14 +103,31 @@ public class InvoiceServiceImpl implements InvoiceService {
                 switch (service.getCalculationType()) {
 
                     case BY_METER:
+
                         MeterReading m = meterReadingRepository
                                 .findByRoomAndServiceAndMonth(room, service, month)
-                                .orElse(null);
+                                .orElseThrow(() ->
+                                        new RuntimeException(
+                                                "Phòng " + room.getRoomName()
+                                                        + " chưa nhập chỉ số "
+                                                        + service.getServiceName()
+                                                        + " tháng " + month
+                                        )
+                                );
 
-                        if (m != null) {
-                            quantity = m.getNewValue() - m.getOldValue(); // ✅ số điện/nước
-                            amount = quantity * bs.getPrice().doubleValue();
+                        if (m.getOldValue() == null || m.getNewValue() == null) {
+                            throw new RuntimeException(
+                                    "Phòng " + room.getRoomName()
+                                            + " chưa nhập đủ chỉ số "
+                                            + service.getServiceName()
+                                            + " tháng " + month
+                            );
                         }
+
+                        quantity = m.getNewValue() - m.getOldValue();
+
+                        amount = quantity * bs.getPrice().doubleValue();
+
                         break;
 
                     case BY_PERSON:

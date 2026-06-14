@@ -93,12 +93,47 @@
               <input type="date" v-model="form.endDate" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
             <div class="space-y-1">
-              <label class="text-xs font-bold text-gray-500 ml-1 italic">Tiền đặt cọc (VNĐ)</label>
-              <input type="number" placeholder="0" v-model="form.deposit" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-red-600">
+              <label class="text-xs font-bold text-gray-500 ml-1 italic">
+                Tiền đặt cọc (VNĐ)
+              </label>
+
+              <div class="relative">
+                <input
+                  :value="formattedDeposit"
+                  @input="handleDepositInput"
+                  type="text"
+                  placeholder="0"
+                  class="w-full p-3 pr-14 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-red-600"
+                >
+
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400"
+                >
+                  VNĐ
+                </span>
+              </div>
             </div>
+
             <div class="space-y-1">
-              <label class="text-xs font-bold text-gray-500 ml-1 italic">Giá thuê thực tế</label>
-              <input type="number" placeholder="0" v-model="form.rentPrice" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-blue-600">
+              <label class="text-xs font-bold text-gray-500 ml-1 italic">
+                Giá thuê thực tế
+              </label>
+
+              <div class="relative">
+                <input
+                  :value="formattedRentPrice"
+                  @input="handleRentPriceInput"
+                  type="text"
+                  placeholder="0"
+                  class="w-full p-3 pr-14 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-blue-600"
+                >
+
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400"
+                >
+                  VNĐ
+                </span>
+              </div>
             </div>
           </div>
         </section>
@@ -287,7 +322,34 @@ const addCustomer = () => {
     cccdBackImage: ""
   })
 }
+const formattedDeposit = computed(() => {
+  if (!form.value.deposit) return ""
 
+  return Number(form.value.deposit)
+    .toLocaleString("vi-VN")
+})
+
+const formattedRentPrice = computed(() => {
+  if (!form.value.rentPrice) return ""
+
+  return Number(form.value.rentPrice)
+    .toLocaleString("vi-VN")
+})
+const handleDepositInput = (e) => {
+  const raw = e.target.value.replace(/\D/g, "")
+
+  form.value.deposit = raw
+    ? Number(raw)
+    : ""
+}
+
+const handleRentPriceInput = (e) => {
+  const raw = e.target.value.replace(/\D/g, "")
+
+  form.value.rentPrice = raw
+    ? Number(raw)
+    : ""
+}
 const loadServices = async () => {
   try {
     const buildingId = room.value.building?.id

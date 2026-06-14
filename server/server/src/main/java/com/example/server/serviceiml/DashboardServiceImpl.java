@@ -56,8 +56,14 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public List<MonthlyRevenueDTO> getMonthlyRevenue() {
 
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
         return invoiceRepository.getMonthlyRevenue(
-                InvoiceStatus.PAID
+                InvoiceStatus.PAID,
+                username
         );
     }
 }

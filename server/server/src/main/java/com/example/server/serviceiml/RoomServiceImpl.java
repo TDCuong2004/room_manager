@@ -1,13 +1,16 @@
 package com.example.server.serviceiml;
 
 import com.example.server.dto.RoomServiceDTO;
+import com.example.server.entity.Contract;
+import com.example.server.entity.Customer;
 import com.example.server.entity.RoomImage;
 import com.example.server.entity.Rooms;
-import com.example.server.repository.BuildingServiceRepository;
-import com.example.server.repository.ContractCustomerRepository;
-import com.example.server.repository.RoomImageRepository;
-import com.example.server.repository.RoomRepository;
+import com.example.server.enums.ContractStatus;
+import com.example.server.enums.CustomerStatus;
+import com.example.server.enums.RoomStatus;
+import com.example.server.repository.*;
 import com.example.server.services.RoomService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,16 +25,23 @@ public class RoomServiceImpl implements RoomService {
     private final ContractCustomerRepository contractCustomerRepository;
     private final RoomRepository roomRepository;
     private final BuildingServiceRepository buildingServiceRepository;
-
+    private final ContractRepository contractRepository;
+    private final CustomerRepository customerRepository;
     @Autowired
     private RoomImageRepository roomImageRepository;
 
-    public RoomServiceImpl(RoomRepository roomRepository,
-                           BuildingServiceRepository buildingServiceRepository,
-                           ContractCustomerRepository contractCustomerRepository) {
+    public RoomServiceImpl(
+            RoomRepository roomRepository,
+            BuildingServiceRepository buildingServiceRepository,
+            ContractCustomerRepository contractCustomerRepository,
+            ContractRepository contractRepository,
+            CustomerRepository customerRepository
+    ) {
         this.roomRepository = roomRepository;
         this.buildingServiceRepository = buildingServiceRepository;
         this.contractCustomerRepository = contractCustomerRepository;
+        this.contractRepository = contractRepository;
+        this.customerRepository = customerRepository;
     }
 
     @Override
@@ -240,6 +250,49 @@ public class RoomServiceImpl implements RoomService {
 
         return savedRoom;
     }
+    @Override
+    @Transactional
+    public void checkoutRoom(Long roomId) {
+
+        Rooms room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng"));
+
+        Contract contract = contractRepository
+                .findByRoom_IdAndStatus(
+                        roomId,
+                        ContractStatus.ACTIVE
+                )
+                .orElseThrow(() ->
+                        new RuntimeException("Phòng không có hợp đồng đang hoạt động")
+                );
+
+        // ================= CONTRACT =================
+
+        contract.setStatus(ContractStatus.TERMINATED);
+
+        contractRepository.save(contract);
+
+        // ================= CUSTOMER =================
+
+        var contractCustomers =
+                contractCustomerRepository.findByContract_Id(contract.getId());
+
+        for (var cc : contractCustomers) {
+
+            Customer customer = cc.getCustomer();
+
+            customer.setStatus(CustomerStatus.INACTIVE);
+
+            customerRepository.save(customer);
+        }
+
+        // ================= ROOM =================
+
+        room.setStatus(RoomStatus.EMPTY);
+
+        roomRepository.save(room);
+    }
+
     @Override
     public void deleteImage(Long imageId) {
         roomImageRepository.deleteById(imageId);
